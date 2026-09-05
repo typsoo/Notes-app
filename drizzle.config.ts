@@ -9,4 +9,5 @@ export default {
     url: env.DATABASE_URL,
   },
   tablesFilter: ["final-notes-app_*"],
+  schemaFilter: ["public"]
 } satisfies Config;
