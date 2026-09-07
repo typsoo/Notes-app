@@ -1,18 +1,18 @@
 ---WORKSPACES---
 
-workspace.create
-workspace.list
-workspace.get
-workspace.update
-workspace.delete
+workspace.create +
+workspace.list +
+workspace.get +
+workspace.update 
+workspace.delete + 
 
 only one member
 
 ---DOCUMENTS---
-document.create
-document.get
-document.list
-document.update
+document.create + 
+document.getById + 
+document.getAll + 
+document.update +
 document.delete
 + document.create/update/delete in one Transaction
 
