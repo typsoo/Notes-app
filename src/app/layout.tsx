@@ -6,6 +6,8 @@ import { Geist } from "next/font/google";
 import { TRPCReactProvider } from "@/trpc/react";
 
 import { ThemeProvider } from "@/components/common/theme-provider";
+import { SideBar } from "@/components/sections/sidebar";
+import { NavLinkScript } from "@/lib/scripts/nav-link";
 
 export const metadata: Metadata = {
   title: "Notes App",
@@ -22,7 +24,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${geist.variable}`}>
+    <html lang="en" className={`${geist.variable}`} suppressHydrationWarning>
       <body>
         <ThemeProvider
           attribute="class"
@@ -30,7 +32,13 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <TRPCReactProvider>{children}</TRPCReactProvider>
+          <TRPCReactProvider>
+            <div className="flex min-h-screen">
+              <SideBar />
+              <main className="min-w-0 flex-1">{children}</main>
+            </div>
+          </TRPCReactProvider>
+          <NavLinkScript />
         </ThemeProvider>
       </body>
     </html>

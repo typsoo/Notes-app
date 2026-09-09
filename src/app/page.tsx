@@ -1,7 +1,6 @@
 "use client";
 
 import { authClient } from "@/server/better-auth/clients";
-import { ModeToggle } from "@/components/ui/theme-toggle";
 
 export default function HomePage() {
   const { data: session, isPending } = authClient.useSession();
@@ -35,7 +34,6 @@ export default function HomePage() {
       >
         Sign in with GitHub
       </button>
-      <ModeToggle />
     </div>
   );
 }
