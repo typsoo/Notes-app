@@ -6,8 +6,9 @@ import { Geist } from "next/font/google";
 import { TRPCReactProvider } from "@/trpc/react";
 
 import { ThemeProvider } from "@/components/common/theme-provider";
-import { SideBar } from "@/components/sections/sidebar";
-import { NavLinkScript } from "@/lib/scripts/nav-link";
+import { NavLinkScript } from "@/components/scripts/nav-link";
+
+import { AppLayout } from "@/components/layout/app-layout";
 
 export const metadata: Metadata = {
   title: "Notes App",
@@ -33,10 +34,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <TRPCReactProvider>
-            <div className="flex min-h-screen">
-              <SideBar />
-              <main className="min-w-0 flex-1">{children}</main>
-            </div>
+            <AppLayout>{children}</AppLayout>
           </TRPCReactProvider>
           <NavLinkScript />
         </ThemeProvider>

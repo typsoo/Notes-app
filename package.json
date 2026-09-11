@@ -40,6 +40,7 @@
     "postgres": "^3.4.9",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "react-resizable-panels": "^4.12.4",
     "server-only": "^0.0.1",
     "shadcn": "^4.21.0",
     "superjson": "^2.2.6",
