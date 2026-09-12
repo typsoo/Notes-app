@@ -1,13 +1,4 @@
-import { z } from "zod";
-
-import { TRPCError } from "@trpc/server";
-import {
-  createTRPCRouter,
-  publicProcedure,
-  protectedProcedure,
-} from "@/server/api/trpc";
-import { workspaces, userWorkspaces } from "@/server/db/schema";
-import { eq, and, exists } from "drizzle-orm";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 
 export const usersRouter = createTRPCRouter({
   me: protectedProcedure.query(({ ctx }) => {

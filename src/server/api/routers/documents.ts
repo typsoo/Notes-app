@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 import { TRPCError } from "@trpc/server";
-import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
-import { documents } from "@/server/db/schema";
+import { createTRPCRouter } from "@/server/api/trpc";
+import { documents, folders } from "@/server/db/schema";
 
 import { eq, and } from "drizzle-orm";
 
@@ -14,16 +14,37 @@ export const documentsRouter = createTRPCRouter({
       z.object({
         title: z.string().min(1).max(256),
         content: z.string().default(""),
+        folderId: z.uuid().nullable().optional(),
         isPinned: z.boolean().optional().default(false),
         isArchived: z.boolean().optional().default(false),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       try {
+        if (input.folderId) {
+          const [folder] = await ctx.db
+            .select({ id: folders.id })
+            .from(folders)
+            .where(
+              and(
+                eq(folders.id, input.folderId),
+                eq(folders.workspaceId, input.workspaceId),
+              ),
+            );
+
+          if (!folder) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Folder not found.",
+            });
+          }
+        }
+
         const [document] = await ctx.db
           .insert(documents)
           .values({
             workspaceId: input.workspaceId,
+            folderId: input.folderId ?? null,
             title: input.title,
             content: input.content,
             isPinned: input.isPinned,
@@ -51,7 +72,7 @@ export const documentsRouter = createTRPCRouter({
           throw new TRPCError({
             code: "CONFLICT",
             message:
-              "A document with this title already exists in this workspace.",
+              "A document with this title already exists in this location.",
             cause: error,
           });
         }
@@ -104,15 +125,38 @@ export const documentsRouter = createTRPCRouter({
         id: z.uuid(),
         title: z.string().min(1).max(256).optional(),
         content: z.string().optional(),
+        folderId: z.uuid().nullable().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const { id, workspaceId, ...updateData } = input;
+        const { id, workspaceId, folderId, ...updateData } = input;
+
+        if (folderId) {
+          const [folder] = await ctx.db
+            .select({ id: folders.id })
+            .from(folders)
+            .where(
+              and(
+                eq(folders.id, folderId),
+                eq(folders.workspaceId, workspaceId),
+              ),
+            );
+
+          if (!folder) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Folder not found.",
+            });
+          }
+        }
 
         const [document] = await ctx.db
           .update(documents)
-          .set(updateData)
+          .set({
+            ...updateData,
+            ...(folderId !== undefined ? { folderId } : {}),
+          })
           .where(
             and(eq(documents.id, id), eq(documents.workspaceId, workspaceId)),
           )
@@ -138,7 +182,7 @@ export const documentsRouter = createTRPCRouter({
           throw new TRPCError({
             code: "CONFLICT",
             message:
-              "A document with this title already exists in this workspace.",
+              "A document with this title already exists in this location.",
             cause: error,
           });
         }

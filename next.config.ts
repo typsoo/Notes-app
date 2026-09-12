@@ -4,11 +4,12 @@
  */
 import "./src/env.js";
 
-import type { NextConfig } from 'next'
+import type { NextConfig } from "next";
 /** @type {import("next").NextConfig} */
 const config: NextConfig = {
   cacheComponents: true,
   serverExternalPackages: ["postgres"],
+  reactCompiler: true,
 };
 
 export default config;

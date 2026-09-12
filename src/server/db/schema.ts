@@ -6,6 +6,7 @@ import {
   primaryKey,
   pgTableCreator,
   uniqueIndex,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 
 export const createTable = pgTableCreator((name) => `final-notes-app_${name}`);
@@ -143,6 +144,41 @@ export const userWorkspaces = createTable(
   (t) => [primaryKey({ columns: [t.userId, t.workspaceId] })],
 );
 
+export const folders = createTable(
+  "folders",
+  (d) => ({
+    id: d.uuid().primaryKey().defaultRandom(),
+
+    workspaceId: d
+      .uuid()
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+
+    parentId: d
+      .uuid()
+      .references((): AnyPgColumn => folders.id, { onDelete: "cascade" }),
+
+    name: d.varchar({ length: 256 }).notNull(),
+
+    createdAt: d.timestamp({ withTimezone: true }).defaultNow().notNull(),
+
+    updatedAt: d
+      .timestamp({ withTimezone: true })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  }),
+  (t) => [
+    index("folders_workspaceId_idx").on(t.workspaceId),
+    index("folders_parentId_idx").on(t.parentId),
+    uniqueIndex("folders_workspaceId_parentId_name_idx").on(
+      t.workspaceId,
+      t.parentId,
+      t.name,
+    ),
+  ],
+);
+
 export const documents = createTable(
   "documents",
   (d) => ({
@@ -151,6 +187,7 @@ export const documents = createTable(
       .uuid()
       .notNull()
       .references(() => workspaces.id, { onDelete: "cascade" }),
+    folderId: d.uuid().references(() => folders.id, { onDelete: "set null" }),
     title: d.varchar({ length: 256 }).notNull(),
     content: d.text().notNull(),
     isPinned: d.boolean().default(false).notNull(),
@@ -165,7 +202,7 @@ export const documents = createTable(
   }),
   (t) => [
     index("documents_workspaceId_idx").on(t.workspaceId),
-    uniqueIndex("documents_workspaceId_title_idx").on(t.workspaceId, t.title),
+    uniqueIndex("documents_workspaceId_title_idx").on(t.title, t.folderId),
   ],
 );
 
