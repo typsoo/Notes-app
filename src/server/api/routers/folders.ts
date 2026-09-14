@@ -132,11 +132,18 @@ export const foldersRouter = createTRPCRouter({
 
   update: workspaceProcedure
     .input(
-      z.object({
-        id: z.uuid(),
-        name: z.string().min(1).max(256).optional(),
-        parentId: z.uuid().nullable().optional(),
-      }),
+      z
+        .object({
+          id: z.uuid(),
+          name: z.string().min(1).max(256).optional(),
+          parentId: z.uuid().nullable().optional(),
+        })
+        .refine(
+          (data) => data.name !== undefined || data.parentId !== undefined,
+          {
+            message: "At least one field (name or parentId) must be provided.",
+          },
+        ),
     )
     .mutation(async ({ ctx, input }) => {
       try {
@@ -173,13 +180,13 @@ export const foldersRouter = createTRPCRouter({
             }>(sql`                
                 WITH RECURSIVE ancestors AS (                                               
                   SELECT id, parent_id                                                      
-                  FROM "final-notes-app_folders"                                            
+                  FROM ${folders}                                           
                   WHERE id = ${parentId} AND workspace_id = ${workspaceId}                  
                                                                                             
                   UNION ALL                                                                 
                                                                                             
                   SELECT f.id, f.parent_id                                                     
-                  FROM "final-notes-app_folders" f                                          
+                  FROM ${folders} f                                          
                   INNER JOIN ancestors a ON f.id = a.parent_id
                                                  
                 )                                                                           
@@ -196,27 +203,25 @@ export const foldersRouter = createTRPCRouter({
               });
             }
           }
-
-          const [folder] = await ctx.db
-            .update(folders)
-            .set({
-              ...(name !== undefined ? { name } : {}),
-              ...(parentId !== undefined ? { parentId } : {}),
-            })
-            .where(
-              and(eq(folders.id, id), eq(folders.workspaceId, workspaceId)),
-            )
-            .returning();
-
-          if (!folder) {
-            throw new TRPCError({
-              code: "NOT_FOUND",
-              message: "Folder not found.",
-            });
-          }
-
-          return folder;
         }
+
+        const [folder] = await ctx.db
+          .update(folders)
+          .set({
+            ...(name !== undefined ? { name } : {}),
+            ...(parentId !== undefined ? { parentId } : {}),
+          })
+          .where(and(eq(folders.id, id), eq(folders.workspaceId, workspaceId)))
+          .returning();
+
+        if (!folder) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Folder not found.",
+          });
+        }
+
+        return folder;
       } catch (error) {
         if (error instanceof TRPCError) throw error;
 

@@ -28,3 +28,7 @@ document.getLinks
 user.me
 
 
+
+Lenis + GSAP (со ScrollTrigger) — это стандарт индустрии для эффекта «pinned zoom». Примеры разных заметок 
+как grid-таблица и потом зум с выдвигающимися элементами и примерами
+

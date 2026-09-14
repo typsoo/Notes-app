@@ -8,10 +8,17 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { SideBar } from "@/components/sections/sidebar";
+import { Suspense } from "react";
+import { FoldersTreeSkeleton } from "@/features/folders-tree/server-skeleton";
 
-export function AppLayout({ children }: { children: React.ReactNode }) {
+export function AppLayoutShell({
+  children,
+  tree,
+}: {
+  children: React.ReactNode;
+  tree: React.ReactNode;
+}) {
   const panelRef = useRef<PanelImperativeHandle>(null);
-
   const [isOpen, setIsOpen] = useState(true);
 
   const handleToggle = () => {
@@ -28,7 +35,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="bg-background flex h-screen w-screen overflow-hidden">
+    <div className="bg-background flex h-dvh w-full overflow-hidden">
       <SideBar isOpen={isOpen} onToggleFiles={handleToggle} />
 
       <ResizablePanelGroup orientation="horizontal" className="h-full flex-1">
@@ -38,24 +45,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           defaultSize="25%"
           minSize="15%"
           maxSize="60%"
-          onResize={(size) => setIsOpen(size.asPercentage > 0)}
-
+          onResize={(size) => {
+            const open = size.asPercentage > 0;
+            setIsOpen((prev) => (prev !== open ? open : prev));
+          }}
           className="bg-sidebar border-sidebar-border border-r"
         >
-          {/* Содержимое панели файлов */}
-          <div className="flex h-full flex-col overflow-y-auto p-3 select-none">
-            <span className="text-muted-foreground mb- 3 text-xs font-semibold uppercase">
-              Файлы
-            </span>
-            <div className="text-muted-foreground space-y-1 text-sm">
-              <div className="hover:bg-sidebar-accent hover:text- foreground cursor-pointer rounded px-2 py-1">
-                📄 Заметка fdsaaaaaaaaaaaaaaaaaaaaaaa1.md
-              </div>
-              <div className="hover:bg-sidebar-accent hover:text- foreground cursor-pointer rounded px-2 py-1">
-                📄 Заметка 2.md
-              </div>
-            </div>
-          </div>
+          <Suspense fallback={<FoldersTreeSkeleton />}>{tree}</Suspense>
         </ResizablePanel>
 
         <ResizableHandle />

@@ -10,6 +10,11 @@ const config: NextConfig = {
   cacheComponents: true,
   serverExternalPackages: ["postgres"],
   reactCompiler: true,
+  experimental: {
+    instantInsights: {
+      validationLevel: "manual-warning",
+    },
+  },
 };
 
 export default config;
