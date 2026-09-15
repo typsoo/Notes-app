@@ -177,24 +177,25 @@ export const foldersRouter = createTRPCRouter({
 
             const [cycle] = await ctx.db.execute<{
               exists: boolean;
-            }>(sql`                
-                WITH RECURSIVE ancestors AS (                                               
-                  SELECT id, parent_id                                                      
-                  FROM ${folders}                                           
-                  WHERE id = ${parentId} AND workspace_id = ${workspaceId}                  
-                                                                                            
-                  UNION ALL                                                                 
-                                                                                            
-                  SELECT f.id, f.parent_id                                                     
-                  FROM ${folders} f                                          
-                  INNER JOIN ancestors a ON f.id = a.parent_id
-                                                 
-                )                                                                           
-                SELECT true AS exists                                                       
-                FROM ancestors                                                              
-                WHERE id = ${id}                                                            
-                LIMIT 1;                                                                    
-    `);
+            }>(sql`
+                WITH RECURSIVE ancestors AS (
+                  SELECT id, "parentId"
+                  FROM ${folders}
+                  WHERE id = ${parentId}
+                    AND "workspaceId" = ${workspaceId}
+
+                  UNION ALL
+
+                  SELECT f.id, f."parentId"
+                  FROM ${folders} f
+                  INNER JOIN ancestors a
+                    ON f.id = a."parentId"
+                )
+                SELECT true AS exists
+                FROM ancestors
+                WHERE id = ${id}
+                LIMIT 1;
+              `);
 
             if (cycle?.exists) {
               throw new TRPCError({
@@ -237,7 +238,6 @@ export const foldersRouter = createTRPCRouter({
             cause: error,
           });
         }
-
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to update folder.",

@@ -1,6 +1,6 @@
 import { api } from "@/trpc/server";
 import { buildTreeItems } from "./transform";
-import { TreeView } from "./view";
+import { TreeView } from "./view/view";
 import { redirect } from "next/dist/client/components/navigation";
 import { TRPCError } from "@trpc/server";
 
@@ -22,7 +22,7 @@ export async function FoldersTreeServer() {
 
     return (
       <div className="flex h-full flex-col p-2 select-none">
-        <TreeView items={items} />
+        <TreeView items={items} workspaceId={activeWorkspaceId} />
       </div>
     );
   } catch (error) {

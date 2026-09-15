@@ -1,28 +1,53 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   ControlledTreeEnvironment,
   Tree,
+  type TreeItem,
   type TreeItemIndex,
+  type DraggingPosition,
 } from "react-complex-tree";
-import type { TreeItemsMap, TreeItemData } from "./transform";
-import { getItemTitle } from "./transform";
+
+import type { TreeItemsMap, TreeItemData } from "../transform";
+import { getItemTitle } from "../transform";
 import { customTreeRenderers } from "./renderers";
+
+import { useTreeDnd } from "./use-tree-dnd";
 
 interface TreeViewProps {
   items: TreeItemsMap;
+  workspaceId: string;
   onSelectDocument?: (docId: string) => void;
+  onDrop?: (items: TreeItem<TreeItemData>[], target: DraggingPosition) => void;
 }
 
-export function TreeView({ items, onSelectDocument }: TreeViewProps) {
+export function TreeView({
+  items,
+  workspaceId,
+  onSelectDocument,
+  onDrop,
+}: TreeViewProps) {
   const [expandedItems, setExpandedItems] = useState<TreeItemIndex[]>(["root"]);
   const [selectedItems, setSelectedItems] = useState<TreeItemIndex[]>([]);
+
+  const handleExpandFolder = (folderId: TreeItemIndex) => {
+    setExpandedItems((prev) =>
+      prev.includes(folderId) ? prev : [...prev, folderId],
+    );
+  };
+
+  const { treeItems, canDrag, canDropAt, handleDrop } = useTreeDnd({
+    items,
+    workspaceId,
+    onDrop,
+    onExpandFolder: handleExpandFolder,
+  });
 
   return (
     <div className="h-full w-full overflow-hidden">
       <ControlledTreeEnvironment<TreeItemData>
-        items={items}
+        items={treeItems}
         getItemTitle={getItemTitle}
         viewState={{
           "folders-tree": {
@@ -30,11 +55,16 @@ export function TreeView({ items, onSelectDocument }: TreeViewProps) {
             selectedItems,
           },
         }}
-        canDragAndDrop={false}
-        canDropOnFolder={false}
-        canReorderItems={false}
+        canDragAndDrop={true}
+        canDropOnFolder={true}
+        canDropOnNonFolder={false}
+        canReorderItems={true}
+        canDrag={canDrag}
+        canDropAt={canDropAt}
         onExpandItem={(item) => {
-          setExpandedItems((prev) => [...prev, item.index]);
+          setExpandedItems((prev) =>
+            prev.includes(item.index) ? prev : [...prev, item.index],
+          );
         }}
         onCollapseItem={(item) => {
           setExpandedItems((prev) => prev.filter((id) => id !== item.index));
@@ -42,7 +72,7 @@ export function TreeView({ items, onSelectDocument }: TreeViewProps) {
         onSelectItems={(itemIds) => {
           setSelectedItems(itemIds);
           const firstId = itemIds[0];
-          if (firstId && !items[firstId]?.isFolder) {
+          if (firstId && !treeItems[firstId]?.isFolder) {
             onSelectDocument?.(String(firstId));
           }
         }}
@@ -57,7 +87,7 @@ export function TreeView({ items, onSelectDocument }: TreeViewProps) {
             onSelectDocument?.(String(item.index));
           }
         }}
-
+        onDrop={handleDrop}
         {...customTreeRenderers}
       >
         <Tree treeId="folders-tree" rootItem="root" treeLabel="Files" />
