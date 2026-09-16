@@ -21,7 +21,21 @@ export const customTreeRenderers: TreeRenderProps<TreeItemData> = {
     </ul>
   ),
 
+  renderDragBetweenLine: ({ draggingPosition, lineProps }) => (
+    <div
+      {...lineProps}
+      className="bg-sidebar-ring pointer-events-none absolute -top-0.5 right-2 z-20 h-0.5 rounded-full"
+      style={{
+        left: `${draggingPosition.depth * 14 + 6}px`,
+      }}
+    />
+  ),
+
   renderItemArrow: ({ item, context }) => {
+    if (item.index === "root") {
+      return null;
+    }
+
     if (!item.isFolder) {
       return <span className="size-5 shrink-0" />;
     }
@@ -46,38 +60,47 @@ export const customTreeRenderers: TreeRenderProps<TreeItemData> = {
     return <span className="truncate">{title}</span>;
   },
 
-  renderItem: ({ depth, children, title, arrow, context }) => (
-    <li
-      {...context.itemContainerWithChildrenProps}
-      className="list-none outline-none"
-    >
-      <div
-        {...context.itemContainerWithoutChildrenProps}
-        style={{
-          paddingLeft: `${depth * 14 + 6}px`,
-        }}
-        className={cn(
-          "group relative flex h-7 items-center rounded-md pr-2 text-xs transition-colors select-none",
-          context.isSelected
-            ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-            : "text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
-          context.isFocused && "ring-sidebar-ring/50 ring-1",
-          context.isDraggingOver &&
-            "bg-sidebar-accent/80 ring-sidebar-ring ring-2 ring-inset",
-        )}
+  renderItem: ({ depth, children, title, arrow, context, item }) => {
+    const isRoot = item.index === "root";
+    const visualDepth = isRoot ? 0 : Math.max(0, depth - 1);
+
+    return (
+      <li
+        {...context.itemContainerWithChildrenProps}
+        className="list-none outline-none"
       >
-        {arrow}
-
-        <button
-          {...context.interactiveElementProps}
-          type="button"
-          className="flex min-w-0 flex-1 cursor-pointer items-center overflow-hidden text-left text-xs outline-none"
+        <div
+          {...context.itemContainerWithoutChildrenProps}
+          style={{
+            paddingLeft: `${visualDepth * 14 + 6}px`,
+          }}
+          className={cn(
+            "group relative flex h-7 items-center rounded-md pr-2 text-xs transition-colors select-none",
+            context.isSelected && !isRoot
+              ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+              : "text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
+            context.isFocused && !isRoot && "ring-sidebar-ring/50 ring-1",
+            context.isDraggingOver &&
+              "bg-sidebar-accent/80 ring-sidebar-ring ring-2 ring-inset",
+            isRoot && "text-muted-foreground cursor-default font-medium",
+          )}
         >
-          {title}
-        </button>
-      </div>
+          {arrow}
 
-      {children}
-    </li>
-  ),
+          <button
+            {...context.interactiveElementProps}
+            type="button"
+            className={cn(
+              "flex min-w-0 flex-1 items-center overflow-hidden text-left text-xs outline-none",
+              isRoot ? "cursor-default" : "cursor-pointer",
+            )}
+          >
+            {title}
+          </button>
+        </div>
+
+        {children}
+      </li>
+    );
+  },
 };

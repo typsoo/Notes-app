@@ -28,7 +28,10 @@ export function TreeView({
   onSelectDocument,
   onDrop,
 }: TreeViewProps) {
-  const [expandedItems, setExpandedItems] = useState<TreeItemIndex[]>(["root"]);
+  const [expandedItems, setExpandedItems] = useState<TreeItemIndex[]>([
+    "workspace",
+    "root",
+  ]);
   const [selectedItems, setSelectedItems] = useState<TreeItemIndex[]>([]);
 
   const handleExpandFolder = (folderId: TreeItemIndex) => {
@@ -67,6 +70,7 @@ export function TreeView({
           );
         }}
         onCollapseItem={(item) => {
+          if (item.index === "root" || item.index === "workspace") return;
           setExpandedItems((prev) => prev.filter((id) => id !== item.index));
         }}
         onSelectItems={(itemIds) => {
@@ -77,6 +81,7 @@ export function TreeView({
           }
         }}
         onPrimaryAction={(item) => {
+          if (item.index === "root" || item.index === "workspace") return;
           if (item.isFolder) {
             setExpandedItems((prev) =>
               prev.includes(item.index)
@@ -90,7 +95,7 @@ export function TreeView({
         onDrop={handleDrop}
         {...customTreeRenderers}
       >
-        <Tree treeId="folders-tree" rootItem="root" treeLabel="Files" />
+        <Tree treeId="folders-tree" rootItem="workspace" treeLabel="Files" />
       </ControlledTreeEnvironment>
     </div>
   );

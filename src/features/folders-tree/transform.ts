@@ -16,6 +16,13 @@ export function buildTreeItems(
   folders: DbFolder[],
   documents: DbDocument[],
 ): TreeItemsMap {
+  const workspaceContainer: AppTreeItem = {
+    index: "workspace",
+    isFolder: true,
+    data: { name: "Workspace" },
+    children: ["root"],
+  };
+
   const rootItem: AppTreeItem = {
     index: "root",
     isFolder: true,
@@ -24,6 +31,7 @@ export function buildTreeItems(
   };
 
   const items: TreeItemsMap = {
+    workspace: workspaceContainer,
     root: rootItem,
   };
 

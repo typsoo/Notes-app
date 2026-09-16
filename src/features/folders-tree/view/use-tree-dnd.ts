@@ -35,7 +35,11 @@ export function useTreeDnd({
   }, [items]);
 
   const canDrag = (dragged: TreeItem<TreeItemData>[]) => {
-    return dragged.length === 1 && dragged[0]?.index !== "root";
+    return (
+      dragged.length === 1 &&
+      dragged[0]?.index !== "root" &&
+      dragged[0]?.index !== "workspace"
+    );
   };
 
   const canDropAt = (
@@ -63,6 +67,10 @@ export function useTreeDnd({
       }
 
       case "item": {
+        if (target.targetItem === "workspace") {
+          return false;
+        }
+
         const targetItem = treeItems[target.targetItem];
 
         if (!targetItem?.isFolder) {
