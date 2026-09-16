@@ -1,7 +1,7 @@
 import { api } from "@/trpc/server";
 import { buildTreeItems } from "./transform";
 import { TreeView } from "./view/view";
-import { redirect } from "next/dist/client/components/navigation";
+import { redirect } from "next/navigation";
 import { TRPCError } from "@trpc/server";
 
 export async function FoldersTreeServer() {

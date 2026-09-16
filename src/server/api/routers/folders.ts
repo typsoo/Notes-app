@@ -37,6 +37,26 @@ export const foldersRouter = createTRPCRouter({
           }
         }
 
+        const [existingFolder] = await ctx.db
+          .select({ id: folders.id })
+          .from(folders)
+          .where(
+            and(
+              eq(folders.workspaceId, input.workspaceId),
+              input.parentId
+                ? eq(folders.parentId, input.parentId)
+                : isNull(folders.parentId),
+              eq(folders.name, input.name),
+            ),
+          );
+
+        if (existingFolder) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "A folder with this name already exists in this location.",
+          });
+        }
+
         const [folder] = await ctx.db
           .insert(folders)
           .values({
@@ -55,13 +75,18 @@ export const foldersRouter = createTRPCRouter({
 
         return folder;
       } catch (error) {
-        if (error instanceof TRPCError) throw error;
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
+        const cause =
+          error instanceof Error && error.cause ? error.cause : error;
 
         if (
-          typeof error === "object" &&
-          error !== null &&
-          "code" in error &&
-          error.code === "23505"
+          typeof cause === "object" &&
+          cause !== null &&
+          "code" in cause &&
+          cause.code === "23505"
         ) {
           throw new TRPCError({
             code: "CONFLICT",
@@ -224,23 +249,30 @@ export const foldersRouter = createTRPCRouter({
 
         return folder;
       } catch (error) {
-        if (error instanceof TRPCError) throw error;
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
+        const cause =
+          error instanceof Error && error.cause ? error.cause : error;
 
         if (
-          typeof error === "object" &&
-          error !== null &&
-          "code" in error &&
-          error.code === "23505"
+          typeof cause === "object" &&
+          cause !== null &&
+          "code" in cause &&
+          cause.code === "23505"
         ) {
           throw new TRPCError({
             code: "CONFLICT",
-            message: "A folder with this name already exists in this location.",
+            message:
+              "A folder with this title already exists in this location.",
             cause: error,
           });
         }
+
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to update folder.",
+          message: "Failed to create folder.",
           cause: error,
         });
       }

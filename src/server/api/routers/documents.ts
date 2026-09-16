@@ -4,7 +4,7 @@ import { TRPCError } from "@trpc/server";
 import { createTRPCRouter } from "@/server/api/trpc";
 import { documents, folders } from "@/server/db/schema";
 
-import { eq, and } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 
 import { workspaceProcedure } from "@/server/api/middleware/workspace";
 
@@ -40,6 +40,27 @@ export const documentsRouter = createTRPCRouter({
           }
         }
 
+        const [existingDocument] = await ctx.db
+          .select({ id: documents.id })
+          .from(documents)
+          .where(
+            and(
+              eq(documents.workspaceId, input.workspaceId),
+              input.folderId
+                ? eq(documents.folderId, input.folderId)
+                : isNull(documents.folderId),
+              eq(documents.title, input.title),
+            ),
+          );
+
+        if (existingDocument) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message:
+              "A document with this title already exists in this location.",
+          });
+        }
+
         const [document] = await ctx.db
           .insert(documents)
           .values({
@@ -61,13 +82,18 @@ export const documentsRouter = createTRPCRouter({
 
         return document;
       } catch (error) {
-        if (error instanceof TRPCError) throw error;
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
+        const cause =
+          error instanceof Error && error.cause ? error.cause : error;
 
         if (
-          typeof error === "object" &&
-          error !== null &&
-          "code" in error &&
-          error.code === "23505"
+          typeof cause === "object" &&
+          cause !== null &&
+          "code" in cause &&
+          cause.code === "23505"
         ) {
           throw new TRPCError({
             code: "CONFLICT",
@@ -171,13 +197,18 @@ export const documentsRouter = createTRPCRouter({
 
         return document;
       } catch (error) {
-        if (error instanceof TRPCError) throw error;
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
+        const cause =
+          error instanceof Error && error.cause ? error.cause : error;
 
         if (
-          typeof error === "object" &&
-          error !== null &&
-          "code" in error &&
-          error.code === "23505"
+          typeof cause === "object" &&
+          cause !== null &&
+          "code" in cause &&
+          cause.code === "23505"
         ) {
           throw new TRPCError({
             code: "CONFLICT",
@@ -189,7 +220,7 @@ export const documentsRouter = createTRPCRouter({
 
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to update document.",
+          message: "Failed to create folder.",
           cause: error,
         });
       }

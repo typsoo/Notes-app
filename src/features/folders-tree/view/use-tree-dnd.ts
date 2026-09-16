@@ -162,6 +162,7 @@ export function useTreeDnd({
 
   return {
     treeItems,
+    setTreeItems,
     canDrag,
     canDropAt,
     handleDrop,

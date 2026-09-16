@@ -4,7 +4,11 @@ import type { TreeItem, TreeItemIndex } from "react-complex-tree";
 export type DbFolder = typeof folders.$inferSelect;
 export type DbDocument = typeof documents.$inferSelect;
 
-export type TreeItemData = DbFolder | DbDocument | { name: string };
+export type TempTreeItemData =
+  { id: string; name: string } | { id: string; title: string };
+
+export type TreeItemData =
+  DbFolder | DbDocument | { name: string } | TempTreeItemData;
 export type AppTreeItem = TreeItem<TreeItemData>;
 export type TreeItemsMap = Record<TreeItemIndex, AppTreeItem>;
 

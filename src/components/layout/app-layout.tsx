@@ -8,8 +8,6 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { SideBar } from "@/components/sections/sidebar";
-import { Suspense } from "react";
-import { FoldersTreeSkeleton } from "@/features/folders-tree/server-skeleton";
 
 export function AppLayoutShell({
   children,
@@ -51,7 +49,7 @@ export function AppLayoutShell({
           }}
           className="bg-sidebar border-sidebar-border border-r"
         >
-          <Suspense fallback={<FoldersTreeSkeleton />}>{tree}</Suspense>
+          {tree}
         </ResizablePanel>
 
         <ResizableHandle />

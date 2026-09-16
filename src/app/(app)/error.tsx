@@ -1,15 +1,22 @@
 "use client";
 
+import { useEffect } from "react";
+
 export default function Error({
-  retry,
+  error,
+  reset,
 }: {
   error: Error & { digest?: string };
-  retry: () => void;
+  reset: () => void;
 }) {
+  useEffect(() => {
+    console.error(error);
+  }, [error]);
+
   return (
     <div>
       <h2>Something went wrong!</h2>
-      <button onClick={() => retry()}>Try again</button>
+      <button onClick={() => reset()}>Try again</button>
     </div>
   );
 }
