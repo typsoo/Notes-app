@@ -3,7 +3,7 @@
 import type { TreeRenderProps } from "react-complex-tree";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { TreeItemData } from "../transform";
+import type { TreeItemData } from "../utils/tree-transform";
 
 export const customTreeRenderers: TreeRenderProps<TreeItemData> = {
   renderTreeContainer: ({ children, containerProps }) => (

@@ -7,14 +7,14 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import { SideBar } from "@/components/sections/sidebar";
+import { NavigationRail } from "@/components/navigation-rail";
 
 export function AppLayoutShell({
   children,
-  tree,
+  sidebar,
 }: {
   children: React.ReactNode;
-  tree: React.ReactNode;
+  sidebar: React.ReactNode;
 }) {
   const panelRef = useRef<PanelImperativeHandle>(null);
   const [isOpen, setIsOpen] = useState(true);
@@ -34,7 +34,7 @@ export function AppLayoutShell({
 
   return (
     <div className="bg-background flex h-dvh w-full overflow-hidden">
-      <SideBar isOpen={isOpen} onToggleFiles={handleToggle} />
+      <NavigationRail isOpen={isOpen} onToggleSidebar={handleToggle} />
 
       <ResizablePanelGroup orientation="horizontal" className="h-full flex-1">
         <ResizablePanel
@@ -49,7 +49,7 @@ export function AppLayoutShell({
           }}
           className="bg-sidebar border-sidebar-border border-r"
         >
-          {tree}
+          {sidebar}
         </ResizablePanel>
 
         <ResizableHandle />

@@ -1,12 +1,9 @@
 import { useState, type Dispatch, type SetStateAction } from "react";
 import type { TreeItemIndex } from "react-complex-tree";
 
-import {
-  useSidebarControl,
-  CreationType,
-} from "@/features/sidebar-controll-panel";
+import { useTreeControl, CreationType } from "../context/tree-control-context";
 import { api } from "@/trpc/react";
-import type { TreeItemsMap, AppTreeItem } from "../transform";
+import type { TreeItemsMap, AppTreeItem } from "../utils/tree-transform";
 import { TRPCClientError } from "@trpc/client";
 
 export type CreationResult =
@@ -50,7 +47,7 @@ export function useTreeCreation({
 }: UseTreeCreationOptions) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const { creationType, isCreating, resetCreation } = useSidebarControl();
+  const { creationType, isCreating, resetCreation } = useTreeControl();
 
   const createFolder = api.folders.create.useMutation();
   const createDocument = api.documents.create.useMutation();

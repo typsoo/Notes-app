@@ -2,12 +2,11 @@ import { NavLink } from "@/components/ui/nav-link";
 import { cn } from "@/lib/utils";
 
 export type NavItemConfig = {
-  href: "/" | "/notes" | "/settings";
+  href: string;
   label: string;
+  borderLine: boolean;
   icon: React.ComponentType<{
     className?: string;
-    strokeWidth?: number;
-    "aria-hidden"?: boolean | "true" | "false";
   }>;
 };
 
@@ -24,21 +23,22 @@ export function NavItem({ item }: { item: NavItemConfig }) {
           "group relative flex size-10 items-center justify-center rounded-lg transition-all duration-150 outline-none select-none",
           "focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2",
           isActive
-            ? "bg-sidebar-accent text-sidebar-accent-foregjround border-sidebar-border border font-bold shadow-xs"
+            ? "bg-sidebar-accent text-sidebar-accent-foreground border-sidebar-border border font-bold shadow-xs"
             : "text-muted-foreground hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground border border-transparent",
         )
       }
     >
       {({ isActive }) => (
         <>
-          <span
-            className={cn(
-              "bg-primary absolute top-2.5 bottom-2.5 -left-2 w-0.5 rounded-r transition-all duration-150",
-              isActive ? "scale-y-100 opacity-100" : "scale-y-50 opacity-0",
-            )}
-            aria-hidden="true"
-          />
-
+          {item.borderLine && (
+            <span
+              className={cn(
+                "bg-primary absolute top-2.5 bottom-2.5 -left-2 w-0.5 rounded-r transition-all duration-150",
+                isActive ? "scale-y-100 opacity-100" : "scale-y-50 opacity-0",
+              )}
+              aria-hidden="true"
+            />
+          )}
           <Icon
             className={cn(
               "size-5 shrink-0 transition-all duration-150",
@@ -48,7 +48,6 @@ export function NavItem({ item }: { item: NavItemConfig }) {
             )}
             aria-hidden="true"
           />
-
           <span className="sr-only">{item.label}</span>
         </>
       )}

@@ -2,15 +2,15 @@
 
 import { FilePlus, FolderPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useSidebarControl } from "./context";
+import { useTreeControl } from "../context/tree-control-context";
 
-export function SidebarControlPanel() {
+export function TreeControlPanel() {
   const { startCreateDocument, startCreateFolder, isCreating } =
-    useSidebarControl();
+    useTreeControl();
 
   return (
     <div
-      className="border-sidebar-border/40 flex items-center justify-center gap-2 border-b px-2 py-1.5 select-none"
+      className="flex items-center justify-center gap-2 px-2 py-1.5 select-none"
       role="toolbar"
       aria-label="Sidebar controls"
     >

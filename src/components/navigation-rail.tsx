@@ -1,32 +1,32 @@
 "use client";
 
 import { Home, Settings } from "lucide-react";
-import { type NavItemConfig, NavItem } from "@/components/ui/nav-item";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { SidebarToggle } from "@/components/ui/sidebar-toggle";
+import { type NavItemConfig, NavItem } from "./ui/nav-item";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { SidebarToggle } from "./sidebar-toggle";
 
 const mainNavItems: NavItemConfig[] = [
-  { href: "/", label: "Home", icon: Home },
+  { href: "/", label: "Home", icon: Home, borderLine: true },
 ];
 
 const bottomNavItems: NavItemConfig[] = [
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/settings", label: "Settings", icon: Settings, borderLine: true },
 ];
 
-export function SideBar({
+export function NavigationRail({
   isOpen,
-  onToggleFiles,
+  onToggleSidebar,
 }: {
   isOpen: boolean;
-  onToggleFiles: () => void;
+  onToggleSidebar: () => void;
 }) {
   return (
     <aside
       className="border-sidebar-border bg-sidebar sticky top-0 flex h-screen w-14 shrink-0 flex-col items-center justify-between border-r px-2 py-3 select-none"
-      aria-label="Sidebar navigation"
+      aria-label="Navigation rail"
     >
       <nav className="flex flex-col items-center gap-2" aria-label="Main">
-        <SidebarToggle isOpen={isOpen} onToggle={onToggleFiles} />
+        <SidebarToggle isOpen={isOpen} onToggle={onToggleSidebar} />
         {mainNavItems.map((item) => (
           <NavItem key={item.href} item={item} />
         ))}

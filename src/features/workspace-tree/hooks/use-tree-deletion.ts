@@ -3,7 +3,7 @@ import type { TreeItemIndex } from "react-complex-tree";
 import { TRPCClientError } from "@trpc/client";
 
 import { api } from "@/trpc/react";
-import type { TreeItemsMap } from "../transform";
+import type { TreeItemsMap } from "../utils/tree-transform";
 
 export type DeletionResult =
   | { success: true; id: string; isFolder: boolean }

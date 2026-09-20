@@ -6,9 +6,8 @@ import type { TreeItem, TreeItemIndex } from "react-complex-tree";
 
 import { api } from "@/trpc/react";
 
-import { getDatabaseId, getDatabaseParentId } from "./tree-mapping";
-
-import type { TreeItemData, TreeItemsMap } from "../transform";
+import { getDatabaseId, getDatabaseParentId } from "../utils/tree-mapping";
+import type { TreeItemData, TreeItemsMap } from "../utils/tree-transform";
 
 export function useTreePersistence(workspaceId: string) {
   const router = useRouter();

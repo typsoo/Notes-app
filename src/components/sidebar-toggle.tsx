@@ -18,6 +18,8 @@ export function SidebarToggle({
   size = "icon",
   ...props
 }: SidebarToggleProps) {
+  const label = title ?? (isOpen ? "Collapse sidebar" : "Expand sidebar");
+
   return (
     <Button
       type="button"
@@ -26,8 +28,8 @@ export function SidebarToggle({
       onClick={onToggle}
       aria-expanded={isOpen}
       aria-haspopup="true"
-      aria-label={title}
-      title={title}
+      aria-label={label}
+      title={label}
       className="text-muted-foreground hover:text-foreground"
       {...props}
     >

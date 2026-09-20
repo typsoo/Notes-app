@@ -1,5 +1,5 @@
 import type { TreeItemIndex } from "react-complex-tree";
-import type { TreeItemsMap } from "../transform";
+import type { TreeItemsMap } from "./tree-transform";
 
 export function isSelfOrDescendant(
   items: TreeItemsMap,
@@ -21,6 +21,7 @@ export function isSelfOrDescendant(
   }
   return false;
 }
+
 export function moveTreeItem(
   currentItems: TreeItemsMap,
   draggedItemId: TreeItemIndex,
@@ -59,6 +60,7 @@ export function moveTreeItem(
 
   return nextItems;
 }
+
 export function getCurrentParentId(
   treeItems: TreeItemsMap,
   itemId: TreeItemIndex,

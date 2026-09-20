@@ -1,5 +1,5 @@
 import type { TreeItem, TreeItemIndex } from "react-complex-tree";
-import type { TreeItemsMap, TreeItemData } from "../transform";
+import type { TreeItemsMap, TreeItemData } from "./tree-transform";
 
 export function getDatabaseId(item: TreeItem<TreeItemData>): string | null {
   return "id" in item.data ? item.data.id : null;

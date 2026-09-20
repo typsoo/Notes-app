@@ -4,7 +4,7 @@ import { type Metadata } from "next";
 
 import { TRPCReactProvider } from "@/trpc/react";
 
-import { ThemeProvider } from "@/components/common/theme-provider";
+import { ThemeProvider } from "@/components/theme/theme-provider";
 import { NavLinkScript } from "@/components/scripts/nav-link";
 import { martianMono, geistSans } from "./fonts";
 

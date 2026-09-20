@@ -9,11 +9,11 @@ import {
   type DraggingPosition,
 } from "react-complex-tree";
 
-import type { TreeItemsMap, TreeItemData } from "../transform";
-import { getItemTitle } from "../transform";
-import { customTreeRenderers } from "./renderers";
-import { useTreeDnd } from "./use-tree-dnd";
-import { useTreeCreation } from "./use-tree-creation";
+import type { TreeItemsMap, TreeItemData } from "../utils/tree-transform";
+import { getItemTitle } from "../utils/tree-transform";
+import { customTreeRenderers } from "./tree-renderers";
+import { useTreeDnd } from "../hooks/use-tree-dnd";
+import { useTreeCreation } from "../hooks/use-tree-creation";
 import { CreationInputBar } from "./creation-input-bar";
 
 interface TreeViewProps {
@@ -93,7 +93,7 @@ export function TreeView({
           items={treeItems}
           getItemTitle={getItemTitle}
           viewState={{
-            "folders-tree": {
+            "workspace-tree": {
               expandedItems,
               selectedItems,
             },
@@ -135,7 +135,11 @@ export function TreeView({
           onDrop={handleDrop}
           {...customTreeRenderers}
         >
-          <Tree treeId="folders-tree" rootItem="workspace" treeLabel="Files" />
+          <Tree
+            treeId="workspace-tree"
+            rootItem="workspace"
+            treeLabel="Files"
+          />
         </ControlledTreeEnvironment>
       </div>
     </div>

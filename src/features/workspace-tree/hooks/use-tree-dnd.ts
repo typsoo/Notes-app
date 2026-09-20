@@ -6,10 +6,14 @@ import type {
   TreeItemIndex,
 } from "react-complex-tree";
 
-import type { TreeItemsMap, TreeItemData } from "../transform";
+import type { TreeItemsMap, TreeItemData } from "../utils/tree-transform";
 
-import { isSelfOrDescendant, moveTreeItem } from "./tree-utils";
-import { useTreePersistence } from "./use-tree-persistance";
+import {
+  isSelfOrDescendant,
+  moveTreeItem,
+  getCurrentParentId,
+} from "../utils/tree-utils";
+import { useTreePersistence } from "./use-tree-persistence";
 
 interface UseTreeDndOptions {
   items: TreeItemsMap;
@@ -17,8 +21,6 @@ interface UseTreeDndOptions {
   onDrop?: (items: TreeItem<TreeItemData>[], target: DraggingPosition) => void;
   onExpandFolder?: (folderId: TreeItemIndex) => void;
 }
-
-import { getCurrentParentId } from "./tree-utils";
 
 export function useTreeDnd({
   items,
@@ -99,6 +101,7 @@ export function useTreeDnd({
         return false;
     }
   };
+
   const handleDrop = async (
     draggedItems: TreeItem<TreeItemData>[],
     target: DraggingPosition,

@@ -9,7 +9,7 @@ export const CreationType = {
 
 export type CreationType = (typeof CreationType)[keyof typeof CreationType];
 
-interface SidebarControlContextValue {
+interface TreeControlContextValue {
   creationType: CreationType | null;
   isCreating: boolean;
   startCreateDocument: () => void;
@@ -18,11 +18,9 @@ interface SidebarControlContextValue {
   resetCreation: () => void;
 }
 
-const SidebarControlContext = createContext<SidebarControlContextValue | null>(
-  null,
-);
+const TreeControlContext = createContext<TreeControlContextValue | null>(null);
 
-export function SidebarControlProvider({ children }: { children: ReactNode }) {
+export function TreeControlProvider({ children }: { children: ReactNode }) {
   const [creationType, setCreationType] = useState<CreationType | null>(null);
 
   const startCreateDocument = () => setCreationType(CreationType.DOCUMENT);
@@ -31,7 +29,7 @@ export function SidebarControlProvider({ children }: { children: ReactNode }) {
   const resetCreation = () => setCreationType(null);
 
   return (
-    <SidebarControlContext.Provider
+    <TreeControlContext.Provider
       value={{
         creationType,
         isCreating: creationType !== null,
@@ -42,16 +40,14 @@ export function SidebarControlProvider({ children }: { children: ReactNode }) {
       }}
     >
       {children}
-    </SidebarControlContext.Provider>
+    </TreeControlContext.Provider>
   );
 }
 
-export function useSidebarControl() {
-  const context = useContext(SidebarControlContext);
+export function useTreeControl() {
+  const context = useContext(TreeControlContext);
   if (!context) {
-    throw new Error(
-      "useSidebarControl must be used within a SidebarControlProvider",
-    );
+    throw new Error("useTreeControl must be used within a TreeControlProvider");
   }
   return context;
 }

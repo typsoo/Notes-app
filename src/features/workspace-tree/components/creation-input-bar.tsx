@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { FileText, Folder } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { CreationType } from "@/features/sidebar-controll-panel";
+import { CreationType } from "../context/tree-control-context";
 
 interface CreationInputBarProps {
   type: CreationType;
