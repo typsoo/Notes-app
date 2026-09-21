@@ -29,7 +29,7 @@ export function TreeControlProvider({ children }: { children: ReactNode }) {
   const resetCreation = () => setCreationType(null);
 
   return (
-    <TreeControlContext.Provider
+    <TreeControlContext
       value={{
         creationType,
         isCreating: creationType !== null,
@@ -40,7 +40,7 @@ export function TreeControlProvider({ children }: { children: ReactNode }) {
       }}
     >
       {children}
-    </TreeControlContext.Provider>
+    </TreeControlContext>
   );
 }
 

@@ -10,7 +10,7 @@ export function TreeControlPanel() {
 
   return (
     <div
-      className="flex items-center justify-center gap-2 px-2 py-1.5 select-none"
+      className="-b flex items-center justify-center gap-2 px-2 py-1.5 select-none"
       role="toolbar"
       aria-label="Sidebar controls"
     >

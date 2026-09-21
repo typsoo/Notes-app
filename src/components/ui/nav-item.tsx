@@ -34,7 +34,9 @@ export function NavItem({ item }: { item: NavItemConfig }) {
             <span
               className={cn(
                 "bg-primary absolute top-2.5 bottom-2.5 -left-2 w-0.5 rounded-r transition-all duration-150",
-                isActive ? "scale-y-100 opacity-100" : "scale-y-50 opacity-0",
+                isActive
+                  ? "scale-y-100 bg-blue-500 opacity-100"
+                  : "scale-y-50 opacity-0",
               )}
               aria-hidden="true"
             />

@@ -1,5 +1,5 @@
 import { AppLayoutShell } from "@/components/layout/app-layout";
-import { Sidebar } from "@/components/layout/sidebar";
+import { Sidebar } from "@/components/layout/sidebar/sidebar";
 
 export default function WorkspaceLayout({
   children,

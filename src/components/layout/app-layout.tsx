@@ -55,7 +55,7 @@ export function AppLayoutShell({
         <ResizableHandle />
 
         <ResizablePanel defaultSize="75%">
-          <main className="h-full w-full overflow-y-auto p-6">{children}</main>
+          <main className="h-full w-full overflow-y-auto">{children}</main>
         </ResizablePanel>
       </ResizablePanelGroup>
     </div>
