@@ -1,9 +1,104 @@
 "use client";
 
-import type { TreeRenderProps } from "react-complex-tree";
-import { ChevronRight } from "lucide-react";
+import type {
+  TreeRenderProps,
+  TreeItemIndex,
+  TreeItemRenderContext,
+} from "react-complex-tree";
+import { ChevronRight, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { TreeItemData } from "../utils/tree-transform";
+import type { TreeItemData, AppTreeItem } from "../utils/tree-transform";
+import {
+  ContextMenu,
+  ContextMenuTrigger,
+  ContextMenuContent,
+  ContextMenuItem,
+} from "@/components/ui/context-menu";
+
+export interface TreeItemRowProps {
+  depth: number;
+  children: React.ReactNode;
+  title: React.ReactNode;
+  arrow: React.ReactNode;
+  context: TreeItemRenderContext;
+  item: AppTreeItem;
+  onDelete?: (itemId: TreeItemIndex) => void;
+}
+
+export function TreeItemRow({
+  depth,
+  children,
+  title,
+  arrow,
+  context,
+  item,
+  onDelete,
+}: TreeItemRowProps) {
+  const isRoot = item.index === "root";
+  const isWorkspace = item.index === "workspace";
+  const visualDepth = isRoot ? 0 : Math.max(0, depth - 1);
+  const isSystemItem = isRoot || isWorkspace;
+
+  const itemContent = (
+    <div
+      {...context.itemContainerWithoutChildrenProps}
+      style={{
+        paddingLeft: `${visualDepth * 14 + 6}px`,
+      }}
+      className={cn(
+        "group relative flex h-7 items-center rounded-md pr-2 text-xs transition-colors select-none",
+        context.isSelected && !isRoot
+          ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+          : "text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
+        context.isFocused && !isRoot && "ring-sidebar-ring/50 ring-1",
+        context.isDraggingOver &&
+          "bg-sidebar-accent/80 ring-sidebar-ring ring-2 ring-inset",
+        isRoot && "text-muted-foreground cursor-default font-medium",
+      )}
+    >
+      {arrow}
+
+      <button
+        {...context.interactiveElementProps}
+        type="button"
+        className={cn(
+          "flex min-w-0 flex-1 items-center overflow-hidden text-left text-xs outline-none",
+          isRoot ? "cursor-default" : "cursor-pointer",
+        )}
+      >
+        {title}
+      </button>
+    </div>
+  );
+
+  return (
+    <li
+      {...context.itemContainerWithChildrenProps}
+      className="list-none outline-none"
+    >
+      {!isSystemItem ? (
+        <ContextMenu>
+          <ContextMenuTrigger render={itemContent} />
+          <ContextMenuContent>
+            <ContextMenuItem
+              variant="destructive"
+              onClick={() => onDelete?.(item.index)}
+            >
+              <Trash2 />
+              <span>
+                {item.isFolder ? "Удалить папку" : "Удалить документ"}
+              </span>
+            </ContextMenuItem>
+          </ContextMenuContent>
+        </ContextMenu>
+      ) : (
+        itemContent
+      )}
+
+      {children}
+    </li>
+  );
+}
 
 export const customTreeRenderers: TreeRenderProps<TreeItemData> = {
   renderTreeContainer: ({ children, containerProps }) => (
@@ -58,49 +153,5 @@ export const customTreeRenderers: TreeRenderProps<TreeItemData> = {
 
   renderItemTitle: ({ title }) => {
     return <span className="truncate">{title}</span>;
-  },
-
-  renderItem: ({ depth, children, title, arrow, context, item }) => {
-    const isRoot = item.index === "root";
-    const visualDepth = isRoot ? 0 : Math.max(0, depth - 1);
-
-    return (
-      <li
-        {...context.itemContainerWithChildrenProps}
-        className="list-none outline-none"
-      >
-        <div
-          {...context.itemContainerWithoutChildrenProps}
-          style={{
-            paddingLeft: `${visualDepth * 14 + 6}px`,
-          }}
-          className={cn(
-            "group relative flex h-7 items-center rounded-md pr-2 text-xs transition-colors select-none",
-            context.isSelected && !isRoot
-              ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-              : "text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
-            context.isFocused && !isRoot && "ring-sidebar-ring/50 ring-1",
-            context.isDraggingOver &&
-              "bg-sidebar-accent/80 ring-sidebar-ring ring-2 ring-inset",
-            isRoot && "text-muted-foreground cursor-default font-medium",
-          )}
-        >
-          {arrow}
-
-          <button
-            {...context.interactiveElementProps}
-            type="button"
-            className={cn(
-              "flex min-w-0 flex-1 items-center overflow-hidden text-left text-xs outline-none",
-              isRoot ? "cursor-default" : "cursor-pointer",
-            )}
-          >
-            {title}
-          </button>
-        </div>
-
-        {children}
-      </li>
-    );
   },
 };

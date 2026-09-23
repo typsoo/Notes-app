@@ -14,7 +14,7 @@ interface UseTreeDeletionOptions {
   treeItems: TreeItemsMap;
   setTreeItems: Dispatch<SetStateAction<TreeItemsMap>>;
   setSelectedItems?: Dispatch<SetStateAction<TreeItemIndex[]>>;
-  onDeleteDocument?: (docId: string) => void;
+  onDeleteSuccess?: (removedIds: Set<TreeItemIndex>) => void;
 }
 
 function getDescendantIds(
@@ -65,7 +65,7 @@ export function useTreeDeletion({
   treeItems,
   setTreeItems,
   setSelectedItems,
-  onDeleteDocument,
+  onDeleteSuccess,
 }: UseTreeDeletionOptions) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -112,8 +112,9 @@ export function useTreeDeletion({
           workspaceId,
           id: String(itemId),
         });
-        onDeleteDocument?.(String(itemId));
       }
+
+      onDeleteSuccess?.(allRemovedIds);
 
       return {
         success: true,

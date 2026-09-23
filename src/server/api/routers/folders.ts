@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter } from "@/server/api/trpc";
-import { folders } from "@/server/db/schema";
+import { folders, documents } from "@/server/db/schema";
 
 import { eq, and, isNull, sql } from "drizzle-orm";
 

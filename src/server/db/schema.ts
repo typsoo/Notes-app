@@ -187,7 +187,7 @@ export const documents = createTable(
       .uuid()
       .notNull()
       .references(() => workspaces.id, { onDelete: "cascade" }),
-    folderId: d.uuid().references(() => folders.id, { onDelete: "set null" }),
+    folderId: d.uuid().references(() => folders.id, { onDelete: "cascade" }),
     title: d.varchar({ length: 256 }).notNull(),
     content: d.text().notNull(),
     isPinned: d.boolean().default(false).notNull(),

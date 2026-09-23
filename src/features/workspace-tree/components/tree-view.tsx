@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   ControlledTreeEnvironment,
   Tree,
@@ -11,9 +12,10 @@ import {
 
 import type { TreeItemsMap, TreeItemData } from "../utils/tree-transform";
 import { getItemTitle } from "../utils/tree-transform";
-import { customTreeRenderers } from "./tree-renderers";
+import { customTreeRenderers, TreeItemRow } from "./tree-renderers";
 import { useTreeDnd } from "../hooks/use-tree-dnd";
 import { useTreeCreation } from "../hooks/use-tree-creation";
+import { useTreeDeletion } from "../hooks/use-tree-deletion";
 import { CreationInputBar } from "./creation-input-bar";
 
 interface TreeViewProps {
@@ -35,6 +37,13 @@ export function TreeView({
   ]);
   const [selectedItems, setSelectedItems] = useState<TreeItemIndex[]>([]);
 
+  const router = useRouter();
+
+  const handleSelectDocument = (docId: string) => {
+    onSelectDocument?.(docId);
+    router.push(`/editor/${docId}`);
+  };
+
   const handleExpandFolder = (folderId: TreeItemIndex) => {
     setExpandedItems((prev) =>
       prev.includes(folderId) ? prev : [...prev, folderId],
@@ -50,8 +59,8 @@ export function TreeView({
     });
 
   const {
-    errorMessage,
-    clearError,
+    errorMessage: creationErrorMessage,
+    clearError: clearCreationError,
     creationType,
     isCreating,
     resetCreation,
@@ -61,21 +70,45 @@ export function TreeView({
     treeItems,
     setTreeItems,
     setSelectedItems,
-    onSelectDocument,
+    onSelectDocument: handleSelectDocument,
   });
+
+  const {
+    handleDelete,
+    errorMessage: deletionErrorMessage,
+    clearError: clearDeletionError,
+  } = useTreeDeletion({
+    workspaceId,
+    treeItems,
+    setTreeItems,
+    setSelectedItems,
+    onDeleteSuccess: (removedIds) => {
+      if (typeof window === "undefined") return;
+      const currentDocId = window.location.pathname.split("/editor/")[1];
+      if (currentDocId && removedIds.has(currentDocId)) {
+        router.push("/editor");
+      }
+    },
+  });
+
+  const activeErrorMessage = creationErrorMessage ?? deletionErrorMessage;
+  const handleClearError = () => {
+    clearCreationError();
+    clearDeletionError();
+  };
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden">
-      {errorMessage && (
+      {activeErrorMessage && (
         <div className="border-destructive/20 bg-destructive/10 text-destructive flex items-center justify-between border-b px-3 py-1.5 text-xs select-none">
-          <span>{errorMessage}</span>
+          <span>{activeErrorMessage}</span>
           <button
             type="button"
-            onClick={clearError}
+            onClick={handleClearError}
             className="text-destructive/80 hover:text-destructive cursor-pointer leading-none font-bold"
             title="Close"
           >
-            ×
+            x
           </button>
         </div>
       )}
@@ -117,7 +150,7 @@ export function TreeView({
             setSelectedItems(itemIds);
             const firstId = itemIds[0];
             if (firstId && !treeItems[firstId]?.isFolder) {
-              onSelectDocument?.(String(firstId));
+              handleSelectDocument(String(firstId));
             }
           }}
           onPrimaryAction={(item) => {
@@ -129,11 +162,14 @@ export function TreeView({
                   : [...prev, item.index],
               );
             } else {
-              onSelectDocument?.(String(item.index));
+              handleSelectDocument(String(item.index));
             }
           }}
           onDrop={handleDrop}
           {...customTreeRenderers}
+          renderItem={(props) => (
+            <TreeItemRow {...props} onDelete={handleDelete} />
+          )}
         >
           <Tree
             treeId="workspace-tree"
