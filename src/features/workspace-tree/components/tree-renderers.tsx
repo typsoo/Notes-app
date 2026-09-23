@@ -5,7 +5,7 @@ import type {
   TreeItemIndex,
   TreeItemRenderContext,
 } from "react-complex-tree";
-import { ChevronRight, Trash2 } from "lucide-react";
+import { ChevronRight, Trash2, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TreeItemData, AppTreeItem } from "../utils/tree-transform";
 import {
@@ -58,16 +58,25 @@ export function TreeItemRow({
     >
       {arrow}
 
-      <button
-        {...context.interactiveElementProps}
-        type="button"
-        className={cn(
-          "flex min-w-0 flex-1 items-center overflow-hidden text-left text-xs outline-none",
-          isRoot ? "cursor-default" : "cursor-pointer",
-        )}
-      >
-        {title}
-      </button>
+      {context.isRenaming ? (
+        <div
+          {...context.interactiveElementProps}
+          className="flex min-w-0 flex-1 items-center overflow-hidden text-left text-xs outline-none"
+        >
+          {title}
+        </div>
+      ) : (
+        <button
+          {...context.interactiveElementProps}
+          type="button"
+          className={cn(
+            "flex min-w-0 flex-1 items-center overflow-hidden text-left text-xs outline-none",
+            isRoot ? "cursor-default" : "cursor-pointer",
+          )}
+        >
+          {title}
+        </button>
+      )}
     </div>
   );
 
@@ -80,14 +89,16 @@ export function TreeItemRow({
         <ContextMenu>
           <ContextMenuTrigger render={itemContent} />
           <ContextMenuContent>
+            <ContextMenuItem onClick={() => context.startRenamingItem()}>
+              <Pencil />
+              <span>Rename</span>
+            </ContextMenuItem>
             <ContextMenuItem
               variant="destructive"
               onClick={() => onDelete?.(item.index)}
             >
               <Trash2 />
-              <span>
-                {item.isFolder ? "Удалить папку" : "Удалить документ"}
-              </span>
+              <span>{item.isFolder ? "Delete Folder" : "Delete Document"}</span>
             </ContextMenuItem>
           </ContextMenuContent>
         </ContextMenu>
@@ -154,4 +165,14 @@ export const customTreeRenderers: TreeRenderProps<TreeItemData> = {
   renderItemTitle: ({ title }) => {
     return <span className="truncate">{title}</span>;
   },
+
+  renderRenameInput: ({ inputProps, inputRef, formProps }) => (
+    <form {...formProps} className="flex min-w-0 flex-1 items-center">
+      <input
+        {...inputProps}
+        ref={inputRef}
+        className="bg-background text-foreground ring-sidebar-ring h-5 w-full rounded border px-1.5 text-xs ring-1 outline-none"
+      />
+    </form>
+  ),
 };

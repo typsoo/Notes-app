@@ -5,7 +5,7 @@ import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { workspaces, userWorkspaces } from "@/server/db/schema";
 import { eq, and, exists } from "drizzle-orm";
 
-export const worspacesRouter = createTRPCRouter({
+export const workspacesRouter = createTRPCRouter({
   create: protectedProcedure
     .input(z.object({ name: z.string().min(1).max(256) }))
     .mutation(async ({ ctx, input }) => {

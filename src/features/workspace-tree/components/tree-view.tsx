@@ -10,6 +10,7 @@ import {
   type DraggingPosition,
 } from "react-complex-tree";
 
+import { api } from "@/trpc/react";
 import type { TreeItemsMap, TreeItemData } from "../utils/tree-transform";
 import { getItemTitle } from "../utils/tree-transform";
 import { customTreeRenderers, TreeItemRow } from "./tree-renderers";
@@ -91,6 +92,52 @@ export function TreeView({
     },
   });
 
+  const updateFolder = api.folders.update.useMutation();
+  const updateDocument = api.documents.update.useMutation();
+
+  const handleRenameItem = async (
+    item: TreeItem<TreeItemData>,
+    newName: string,
+  ) => {
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+
+    const previousTreeItems = treeItems;
+    const isFolder = Boolean(item.isFolder);
+
+    setTreeItems((prev) => {
+      const current = prev[item.index];
+      if (!current) return prev;
+      return {
+        ...prev,
+        [item.index]: {
+          ...current,
+          data: isFolder
+            ? { ...current.data, name: trimmed }
+            : { ...current.data, title: trimmed },
+        },
+      };
+    });
+
+    try {
+      if (isFolder) {
+        await updateFolder.mutateAsync({
+          workspaceId,
+          id: String(item.index),
+          name: trimmed,
+        });
+      } else {
+        await updateDocument.mutateAsync({
+          workspaceId,
+          id: String(item.index),
+          title: trimmed,
+        });
+      }
+    } catch {
+      setTreeItems(previousTreeItems);
+    }
+  };
+
   const activeErrorMessage = creationErrorMessage ?? deletionErrorMessage;
   const handleClearError = () => {
     clearCreationError();
@@ -135,6 +182,8 @@ export function TreeView({
           canDropOnFolder={true}
           canDropOnNonFolder={false}
           canReorderItems={true}
+          canRename={true}
+          onRenameItem={handleRenameItem}
           canDrag={canDrag}
           canDropAt={canDropAt}
           onExpandItem={(item) => {
