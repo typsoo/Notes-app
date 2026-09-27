@@ -1,10 +1,10 @@
-import { AppLayoutShell } from "@/components/layout/app-layout";
 import { Sidebar } from "@/components/layout/sidebar/sidebar";
 import {
   WorkspaceTree,
   WorkspaceTreeSkeleton,
 } from "@/features/workspace-tree";
 import { Suspense } from "react";
+import { WorkspaceLayoutShell } from "@/components/layout/app-layout";
 
 interface WorkspaceLayoutProps {
   children: React.ReactNode;
@@ -16,7 +16,7 @@ export default function WorkspaceLayout({
   params,
 }: WorkspaceLayoutProps) {
   return (
-    <AppLayoutShell
+    <WorkspaceLayoutShell
       sidebar={
         <Sidebar
           workspaceTree={
@@ -30,6 +30,6 @@ export default function WorkspaceLayout({
       }
     >
       {children}
-    </AppLayoutShell>
+    </WorkspaceLayoutShell>
   );
 }
