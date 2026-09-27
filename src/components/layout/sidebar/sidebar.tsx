@@ -1,12 +1,22 @@
-import { WorkspaceTree } from "@/features/workspace-tree";
 import Search from "@/features/search/search";
 import { SidebarTab, type SidebarTabId } from "./tabs-data";
 
 import { SidebarContent } from "@/components/layout/sidebar/sidebar-content";
+import { TreeControlPanel } from "@/features/workspace-tree/components/tree-control-panel";
+import { TreeControlProvider } from "@/features/workspace-tree/context/tree-control-context";
 
-export function Sidebar() {
+interface SidebarProps {
+  workspaceTree: React.ReactNode;
+}
+
+export function Sidebar({ workspaceTree }: SidebarProps) {
   const panelMap: Record<SidebarTabId, React.ReactNode> = {
-    [SidebarTab.Files]: <WorkspaceTree />,
+    [SidebarTab.Files]: (
+      <TreeControlProvider>
+        <TreeControlPanel />
+        {workspaceTree}
+      </TreeControlProvider>
+    ),
     [SidebarTab.Search]: <Search />,
   };
 

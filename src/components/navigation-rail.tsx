@@ -6,7 +6,7 @@ import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { SidebarToggle } from "./sidebar-toggle";
 
 const mainNavItems: NavItemConfig[] = [
-  { href: "/editor", label: "Home", icon: Home, borderLine: true },
+  { href: "/workspaces", label: "Home", icon: Home, borderLine: true },
 ];
 
 const bottomNavItems: NavItemConfig[] = [

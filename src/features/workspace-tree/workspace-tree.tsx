@@ -1,42 +1,26 @@
 import { api } from "@/trpc/server";
-import { redirect } from "next/navigation";
 import { TRPCError } from "@trpc/server";
 import { buildTreeItems } from "./utils/tree-transform";
 import { TreeView } from "./components/tree-view";
-import { TreeControlPanel } from "./components/tree-control-panel";
-import { TreeControlProvider } from "./context/tree-control-context";
-import { Suspense } from "react";
+import { redirect } from "next/navigation";
 
-export function WorkspaceTree() {
-  return (
-    <TreeControlProvider>
-      <div className="flex h-full flex-col overflow-hidden">
-        <TreeControlPanel />
-
-        <div className="min-h-0 flex-1 overflow-y-auto p-2 select-none">
-          <Suspense fallback={<WorkspaceTreeSkeleton />}>
-            <WorkspaceTreeContent />
-          </Suspense>
-        </div>
-      </div>
-    </TreeControlProvider>
-  );
+interface WorkspaceTreeProps {
+  workspaceId: string;
 }
 
-async function WorkspaceTreeContent() {
+export function WorkspaceTree({ workspaceId }: WorkspaceTreeProps) {
+  return <WorkspaceTreeContent workspaceId={workspaceId} />;
+}
+
+async function WorkspaceTreeContent({ workspaceId }: { workspaceId: string }) {
   try {
-    const workspaces = await api.workspaces.getAll();
-    const activeWorkspaceId = workspaces[0]?.id;
-
-    if (!activeWorkspaceId) redirect("/onboarding");
-
     const [folders, documents] = await Promise.all([
-      api.folders.getAll({ workspaceId: activeWorkspaceId }),
-      api.documents.getAll({ workspaceId: activeWorkspaceId }),
+      api.folders.getAll({ workspaceId }),
+      api.documents.getAll({ workspaceId }),
     ]);
 
     const items = buildTreeItems(folders, documents);
-    return <TreeView items={items} workspaceId={activeWorkspaceId} />;
+    return <TreeView items={items} workspaceId={workspaceId} />;
   } catch (error) {
     if (error instanceof TRPCError && error.code === "UNAUTHORIZED") {
       redirect("/login");

@@ -42,7 +42,7 @@ export function TreeView({
 
   const handleSelectDocument = (docId: string) => {
     onSelectDocument?.(docId);
-    router.push(`/editor/${docId}`);
+    router.push(`/workspaces/${workspaceId}/editor/${docId}`);
   };
 
   const handleExpandFolder = (folderId: TreeItemIndex) => {
@@ -87,7 +87,7 @@ export function TreeView({
       if (typeof window === "undefined") return;
       const currentDocId = window.location.pathname.split("/editor/")[1];
       if (currentDocId && removedIds.has(currentDocId)) {
-        router.push("/editor");
+        router.push(`/workspaces/${workspaceId}/editor`);
       }
     },
   });
