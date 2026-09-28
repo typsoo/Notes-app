@@ -115,6 +115,23 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  /* Glassmorphism settings - easy to customize */
+  --glass-blur: 16px;
+  --glass-saturate: 180%;
+  --glass-overlay-bg: rgba(0, 0, 0, 0.45);
+  --glass-panel-bg: oklch(0.205 0 0 / 80%);
+  --glass-panel-border: oklch(1 0 0 / 12%);
+  --glass-panel-shadow:
+    0 24px 48px -12px rgba(0, 0, 0, 0.5), inset 0 1px 1px oklch(1 0 0 / 15%);
+}
+
+:root:not(.dark) {
+  --glass-overlay-bg: rgba(0, 0, 0, 0.25);
+  --glass-panel-bg: oklch(1 0 0 / 80%);
+  --glass-panel-border: oklch(0 0 0 / 10%);
+  --glass-panel-shadow:
+    0 24px 48px -12px rgba(0, 0, 0, 0.15), inset 0 1px 1px oklch(1 0 0 / 30%);
 }
 
 @layer base {
@@ -127,4 +144,18 @@
   html {
     @apply font-sans;
   }
+}
+
+/* Glass utilities */
+.glass-backdrop {
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  background-color: var(--glass-overlay-bg);
+}
+
+.glass-panel {
+  backdrop-filter: blur(calc(var(--glass-blur) * 1.25))
+    saturate(var(--glass-saturate));
+  background-color: var(--glass-panel-bg);
+  border: 1px solid var(--glass-panel-border);
+  box-shadow: var(--glass-panel-shadow);
 }

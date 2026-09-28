@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workspaces - Fluid Ambient Sphere</title>
+  <style>
+    :root {
+      --bg: #08090d;
+      --card-bg: rgba(18, 22, 30, 0.55);
+      --card-border: rgba(255, 255, 255, 0.07);
+      --text-main: #f1f5f9;
+      --text-muted: #8492a6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #bg-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .ui-layer {
+      position: relative;
+      z-index: 1;
+      padding: 44px 52px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 34px;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    .btn-add {
+      background: #f8fafc;
+      color: #0f172a;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .btn-add:hover {
+      opacity: 0.9;
+    }
+
+    .grid {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 15px 22px;
+      min-width: 210px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--text-main);
+      text-decoration: none;
+      font-size: 14px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .card:hover {
+      border-color: rgba(255, 255, 255, 0.22);
+      transform: translateY(-2px);
+    }
+
+    .card-icon {
+      margin-right: 12px;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="bg-canvas"></div>
+
+  <main class="ui-layer">
+    <div class="header">
+      <div>
+        <h1>Workspaces</h1>
+        <div class="subtitle">Выберите или создайте рабочее пространство</div>
+      </div>
+      <button class="btn-add">+ Добавить новый workspace</button>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <span><span class="card-icon">📁</span> Test Workspace</span>
+        <span>&rarr;</span>
+      </div>
+      <div class="card">
+        <span><span class="card-icon">📁</span> Test2</span>
+        <span>&rarr;</span>
+      </div>
+      <div class="card">
+        <span><span class="card-icon">📁</span> test3</span>
+        <span>&rarr;</span>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    const container = document.getElementById('bg-canvas');
+
+    // 1. Сцена и камера
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 7.5;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    container.appendChild(renderer.domElement);
+
+    // 2. Мягкая радиальная текстура частицы
+    function createSoftCircleTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+      const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+      grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+      grad.addColorStop(0.25, 'rgba(185, 215, 255, 0.65)');
+      grad.addColorStop(0.7, 'rgba(140, 185, 255, 0.15)');
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(32, 32, 32, 0, Math.PI * 2);
+      ctx.fill();
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    // 3. Создание разреженной сферы
+    const PARTICLE_COUNT = 6500;
+    const geometry = new THREE.BufferGeometry();
+
+    const positions = new Float32Array(PARTICLE_COUNT * 3);
+    const originalPositions = new Float32Array(PARTICLE_COUNT * 3);
+    const velocities = new Float32Array(PARTICLE_COUNT * 3);
+
+    const SPHERE_RADIUS = 3.2;
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const idx = i * 3;
+
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(Math.random() * 2 - 1);
+      const rad = SPHERE_RADIUS * Math.cbrt(Math.random());
+
+      const x = rad * Math.sin(phi) * Math.cos(theta);
+      const y = rad * Math.sin(phi) * Math.sin(theta);
+      const z = rad * Math.cos(phi);
+
+      positions[idx] = x;
+      positions[idx + 1] = y;
+      positions[idx + 2] = z;
+
+      originalPositions[idx] = x;
+      originalPositions[idx + 1] = y;
+      originalPositions[idx + 2] = z;
+
+      velocities[idx] = 0;
+      velocities[idx + 1] = 0;
+      velocities[idx + 2] = 0;
+    }
+
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+    const material = new THREE.PointsMaterial({
+      size: 0.05,
+      map: createSoftCircleTexture(),
+      transparent: true,
+      opacity: 0.42,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+
+    const particles = new THREE.Points(geometry, material);
+    // Сдвиг сферы в правую область
+    particles.position.set(1.4, -0.2, 0);
+    scene.add(particles);
+
+    // 4. Безопасная обработка движения мыши
+    let isMouseActive = false;
+    let mouseInfluence = 0; // Плавное нарастание влияния при входе курсора
+    const targetWorldMouse = new THREE.Vector3();
+    const smoothWorldMouse = new THREE.Vector3();
+    const localMouse = new THREE.Vector3();
+
+    window.addEventListener('mousemove', (e) => {
+      const nx = (e.clientX / window.innerWidth) * 2 - 1;
+      const ny = -(e.clientY / window.innerHeight) * 2 + 1;
+
+      // Проекция координат курсора на плоскость Z=0 в мировом пространстве
+      const v = new THREE.Vector3(nx, ny, 0.5);
+      v.unproject(camera);
+      const dir = v.sub(camera.position).normalize();
+      const dist = -camera.position.z / dir.z;
+      const hitPos = camera.position.clone().add(dir.multiplyScalar(dist));
+
+      targetWorldMouse.copy(hitPos);
+
+      // Если курсор впервые зашел в окно — мгновенно инициализируем точку без прыжка
+      if (!isMouseActive) {
+        smoothWorldMouse.copy(targetWorldMouse);
+        isMouseActive = true;
+      }
+    });
+
+    window.addEventListener('mouseleave', () => {
+      isMouseActive = false;
+    });
+
+    // 5. Физические параметры жидкости/шелка
+    const ATTRACTION_RADIUS = 2.4; 
+    const MAGNET_FORCE = 0.0035;   // Очень мягкая сила притяжения
+    const RETURN_SPRING = 0.015;   // Возврат на базовую орбиту
+    const DAMPING = 0.92;          // Коэффициент гашения скорости
+    const MAX_SPEED = 0.045;       // Потолок скорости: устраняет любые скачки
+
+    const posAttr = geometry.attributes.position;
+    let time = 0;
+
+    function animate() {
+      requestAnimationFrame(animate);
+      time += 0.004;
+
+      // Медленное фоновое вращение всей сферы
+      particles.rotation.y += 0.0006;
+      particles.rotation.x = Math.sin(time * 0.5) * 0.03;
+      particles.updateMatrixWorld();
+
+      // Плавное нарастание / угасание силы при входе и выходе курсора из окна
+      const targetInfluence = isMouseActive ? 1.0 : 0.0;
+      mouseInfluence += (targetInfluence - mouseInfluence) * 0.05;
+
+      // Плавное следование за курсором в мировом пространстве
+      smoothWorldMouse.lerp(targetWorldMouse, 0.06);
+
+      // Ключевой момент: переводим мировую мышь в локальные координаты вращающейся сферы
+      localMouse.copy(smoothWorldMouse);
+      particles.worldToLocal(localMouse);
+
+      const p = posAttr.array;
+      const currentForce = MAGNET_FORCE * mouseInfluence;
+
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        const idx = i * 3;
+
+        // Исходные координаты с органическим фоновым дыханием
+        const ox = originalPositions[idx] + Math.sin(time + originalPositions[idx + 1] * 1.5) * 0.06;
+        const oy = originalPositions[idx + 1] + Math.cos(time + originalPositions[idx] * 1.5) * 0.06;
+        const oz = originalPositions[idx + 2];
+
+        // Расстояние до мыши в едином локальном пространстве
+        const dx = localMouse.x - p[idx];
+        const dy = localMouse.y - p[idx + 1];
+        const dz = localMouse.z - p[idx + 2];
+        const distSq = dx * dx + dy * dy + dz * dz;
+
+        if (mouseInfluence > 0.001 && distSq < ATTRACTION_RADIUS * ATTRACTION_RADIUS) {
+          const dist = Math.sqrt(distSq);
+          // Гладкая интерполяция (smoothstep) без резкой ступени на границе радиуса
+          const t = 1 - (dist / ATTRACTION_RADIUS);
+          const smoothFactor = t * t * (3 - 2 * t);
+          const force = smoothFactor * currentForce;
+
+          velocities[idx] += dx * force;
+          velocities[idx + 1] += dy * force;
+          velocities[idx + 2] += dz * force;
+        }
+
+        // Мягкий возврат в базовое положение
+        velocities[idx] += (ox - p[idx]) * RETURN_SPRING;
+        velocities[idx + 1] += (oy - p[idx + 1]) * RETURN_SPRING;
+        velocities[idx + 2] += (oz - p[idx + 2]) * RETURN_SPRING;
+
+        // Вязкость (демпфирование)
+        velocities[idx] *= DAMPING;
+        velocities[idx + 1] *= DAMPING;
+        velocities[idx + 2] *= DAMPING;
+
+        // Защитный потолок скорости (Speed Capping): полностью исключает резкие рывки
+        const speedSq = velocities[idx] * velocities[idx] + 
+                        velocities[idx + 1] * velocities[idx + 1] + 
+                        velocities[idx + 2] * velocities[idx + 2];
+
+        if (speedSq > MAX_SPEED * MAX_SPEED) {
+          const ratio = MAX_SPEED / Math.sqrt(speedSq);
+          velocities[idx] *= ratio;
+          velocities[idx + 1] *= ratio;
+          velocities[idx + 2] *= ratio;
+        }
+
+        // Обновление позиций
+        p[idx] += velocities[idx];
+        p[idx + 1] += velocities[idx + 1];
+        p[idx + 2] += velocities[idx + 2];
+      }
+
+      posAttr.needsUpdate = true;
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    // 6. Обработка ресайза
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
