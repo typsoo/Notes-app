@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { Block } from "@blocknote/core";
 
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter } from "@/server/api/trpc";
@@ -13,7 +14,7 @@ export const documentsRouter = createTRPCRouter({
     .input(
       z.object({
         title: z.string().min(1).max(256),
-        content: z.string().default(""),
+        content: z.custom<Block[]>((val) => Array.isArray(val)).default([]),
         folderId: z.uuid().nullable().optional(),
         isPinned: z.boolean().optional().default(false),
         isArchived: z.boolean().optional().default(false),
@@ -150,7 +151,7 @@ export const documentsRouter = createTRPCRouter({
       z.object({
         id: z.uuid(),
         title: z.string().min(1).max(256).optional(),
-        content: z.string().optional(),
+        content: z.custom<Block[]>((val) => Array.isArray(val)).optional(),
         folderId: z.uuid().nullable().optional(),
       }),
     )

@@ -4,13 +4,73 @@ import { db } from "@/server/db";
 import {
   documents,
   folders,
+  users,
   userWorkspaces,
   workspaces,
 } from "@/server/db/schema";
+import type { Block } from "@blocknote/core";
 
-const userId = "mocked-user-id";
+function createParagraph(text: string): Block {
+  return {
+    id: crypto.randomUUID(),
+    type: "paragraph",
+    props: {
+      textColor: "default",
+      backgroundColor: "default",
+      textAlignment: "left",
+    },
+    content: [{ type: "text", text, styles: {} }],
+    children: [],
+  };
+}
+
+function createHeading(text: string, level: 1 | 2 | 3 = 1): Block {
+  return {
+    id: crypto.randomUUID(),
+    type: "heading",
+    props: {
+      textColor: "default",
+      backgroundColor: "default",
+      textAlignment: "left",
+      level,
+    },
+    content: [{ type: "text", text, styles: {} }],
+    children: [],
+  };
+}
+
+function createNumberedListItem(text: string): Block {
+  return {
+    id: crypto.randomUUID(),
+    type: "numberedListItem",
+    props: {
+      textColor: "default",
+      backgroundColor: "default",
+      textAlignment: "left",
+      start: 1,
+    },
+    content: [{ type: "text", text, styles: {} }],
+    children: [],
+  };
+}
 
 async function main() {
+  let [user] = await db.select().from(users).limit(1);
+
+  if (!user) {
+    [user] = await db
+      .insert(users)
+      .values({
+        name: "Test User",
+        email: "test@example.com",
+      })
+      .returning();
+  }
+
+  if (!user) {
+    throw new Error("Failed to get or create user");
+  }
+
   const [workspace] = await db
     .insert(workspaces)
     .values({
@@ -23,7 +83,7 @@ async function main() {
   }
 
   await db.insert(userWorkspaces).values({
-    userId,
+    userId: user.id,
     workspaceId: workspace.id,
   });
 
@@ -70,25 +130,33 @@ async function main() {
       workspaceId: workspace.id,
       folderId: null,
       title: "Welcome Note",
-      content: "# Welcome\n\nThis is a root note without a folder.",
+      content: [
+        createHeading("Welcome", 1),
+        createParagraph("This is a root note without a folder."),
+      ],
     },
     {
       workspaceId: workspace.id,
       folderId: personalFolder.id,
       title: "Personal Goals",
-      content: "1. Read books\n2. Exercise regularly",
+      content: [
+        createNumberedListItem("Read books"),
+        createNumberedListItem("Exercise regularly"),
+      ],
     },
     {
       workspaceId: workspace.id,
       folderId: workFolder.id,
       title: "Meeting Notes",
-      content: "Discuss sprint roadmap and goals.",
+      content: [createParagraph("Discuss sprint roadmap and goals.")],
     },
     {
       workspaceId: workspace.id,
       folderId: projectsFolder.id,
       title: "App Architecture",
-      content: "Details about database schema and folder hierarchy.",
+      content: [
+        createParagraph("Details about database schema and folder hierarchy."),
+      ],
     },
   ]);
 

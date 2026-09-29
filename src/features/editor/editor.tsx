@@ -1,18 +1,32 @@
 "use client";
-
-import React from "react";
-import { useCreateBlockNote } from "@blocknote/react";
-// Or, you can use ariakit, shadcn, etc.
-import { BlockNoteView } from "@blocknote/mantine";
-// Default styles for the mantine editor
-import "@blocknote/mantine/style.css";
-// Include the included Inter font
 import "@blocknote/core/fonts/inter.css";
+import { useCreateBlockNote } from "@blocknote/react";
+import { BlockNoteView } from "@blocknote/mantine";
+import "@blocknote/mantine/style.css";
 
-export default function MyEditor() {
-  // Create a new editor instance
-  const editor = useCreateBlockNote();
+import { useTheme } from "next-themes";
 
-  // Render the editor
-  return <BlockNoteView editor={editor} />;
+import type { Block } from "@blocknote/core";
+
+export interface EditorProps {
+  initialContent?: Block[];
+  onChange: (blocks: Block[]) => void;
+}
+
+export default function Editor({ initialContent, onChange }: EditorProps) {
+  const { resolvedTheme } = useTheme();
+
+  const editor = useCreateBlockNote({
+    initialContent:
+      initialContent && initialContent.length > 0 ? initialContent : undefined,
+  });
+
+  return (
+    <BlockNoteView
+      editor={editor}
+      theme={resolvedTheme === "dark" ? "dark" : "light"}
+      onChange={() => onChange(editor.document)}
+      className="min-h-full"
+    />
+  );
 }

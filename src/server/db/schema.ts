@@ -8,6 +8,7 @@ import {
   uniqueIndex,
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
+import type { Block } from "@blocknote/core";
 
 export const createTable = pgTableCreator((name) => `final-notes-app_${name}`);
 
@@ -189,7 +190,7 @@ export const documents = createTable(
       .references(() => workspaces.id, { onDelete: "cascade" }),
     folderId: d.uuid().references(() => folders.id, { onDelete: "cascade" }),
     title: d.varchar({ length: 256 }).notNull(),
-    content: d.text().notNull(),
+    content: d.jsonb().$type<Block[]>().notNull().default([]),
     isPinned: d.boolean().default(false).notNull(),
     isArchived: d.boolean().default(false).notNull(),
     createdAt: d.timestamp({ withTimezone: true }).defaultNow().notNull(),
