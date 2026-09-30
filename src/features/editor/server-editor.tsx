@@ -2,7 +2,7 @@ import "server-only";
 
 import { notFound } from "next/navigation";
 import { api } from "@/trpc/server";
-import { TRPCError } from "@trpc/server";
+import { withTrpcRedirects } from "@/server/api/with-trpc-redirect";
 
 import { DocumentClientEditor } from "./client-editor";
 
@@ -12,27 +12,22 @@ interface Props {
 }
 
 export async function DocumentServer({ id, workspaceId }: Props) {
-  try {
-    const doc = await api.documents.getById({ id, workspaceId });
+  const doc = await withTrpcRedirects(() =>
+    api.documents.getById({ id, workspaceId }),
+  );
 
-    if (!doc) {
-      notFound();
-    }
-
-    return (
-      <DocumentClientEditor
-        documentId={doc.id}
-        workspaceId={doc.workspaceId}
-        title={doc.title}
-        initialContent={doc.content}
-      />
-    );
-  } catch (error) {
-    if (error instanceof TRPCError && error.code === "NOT_FOUND") {
-      notFound();
-    }
-    throw error;
+  if (!doc) {
+    notFound();
   }
+
+  return (
+    <DocumentClientEditor
+      documentId={doc.id}
+      workspaceId={doc.workspaceId}
+      title={doc.title}
+      initialContent={doc.content}
+    />
+  );
 }
 
 export function DocumentEditorSkeleton() {

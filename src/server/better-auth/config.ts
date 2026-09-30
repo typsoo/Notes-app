@@ -3,11 +3,11 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 
 import { env } from "@/env";
 import { db } from "@/server/db";
-import * as schema from "@/server/db/schema"; 
+import * as schema from "@/server/db/schema";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
-    provider: "pg", 
+    provider: "pg",
     schema: {
       user: schema.users,
       session: schema.session,
@@ -17,24 +17,24 @@ export const auth = betterAuth({
   }),
   advanced: {
     database: {
-      generateId: false, 
+      generateId: false,
     },
   },
   emailAndPassword: {
     enabled: false,
   },
-    session: {
-      expiresIn: 60 * 60 * 24 * 7, 
-      updateAge: 60 * 60 * 24 
+  session: {
+    expiresIn: 60 * 60 * 24 * 7,
+    updateAge: 60 * 60 * 24,
   },
-  
+
   socialProviders: {
     github: {
       clientId: env.BETTER_AUTH_GITHUB_CLIENT_ID,
       clientSecret: env.BETTER_AUTH_GITHUB_CLIENT_SECRET,
-      redirectURI: "http://localhost:3000/api/auth/callback/github",
+      redirectURI: `${env.BETTER_AUTH_URL}/api/auth/callback/github`,
     },
   },
 });
- 
+
 export type Session = typeof auth.$Infer.Session;

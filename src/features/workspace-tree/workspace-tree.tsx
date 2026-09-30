@@ -1,8 +1,7 @@
 import { api } from "@/trpc/server";
-import { TRPCError } from "@trpc/server";
 import { buildTreeItems } from "./utils/tree-transform";
 import { TreeView } from "./components/tree-view";
-import { redirect } from "next/navigation";
+import { withTrpcRedirects } from "@/server/api/with-trpc-redirect";
 
 interface WorkspaceTreeProps {
   workspaceId: string;
@@ -13,20 +12,15 @@ export function WorkspaceTree({ workspaceId }: WorkspaceTreeProps) {
 }
 
 async function WorkspaceTreeContent({ workspaceId }: { workspaceId: string }) {
-  try {
-    const [folders, documents] = await Promise.all([
+  const [folders, documents] = await withTrpcRedirects(() =>
+    Promise.all([
       api.folders.getAll({ workspaceId }),
       api.documents.getAll({ workspaceId }),
-    ]);
+    ]),
+  );
 
-    const items = buildTreeItems(folders, documents);
-    return <TreeView items={items} workspaceId={workspaceId} />;
-  } catch (error) {
-    if (error instanceof TRPCError && error.code === "UNAUTHORIZED") {
-      redirect("/login");
-    }
-    throw error;
-  }
+  const items = buildTreeItems(folders, documents);
+  return <TreeView items={items} workspaceId={workspaceId} />;
 }
 
 const SKELETON_ITEMS = [

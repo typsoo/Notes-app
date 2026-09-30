@@ -1,9 +1,14 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
+
 import { authClient } from "@/server/better-auth/clients";
 
 export default function HomePage() {
+  const searchParams = useSearchParams();
   const { data: session, isPending } = authClient.useSession();
+
+  const callbackURL = searchParams.get("callbackUrl") ?? "/workspaces";
 
   if (isPending) {
     return <div className="p-8">Loading...</div>;
@@ -29,7 +34,12 @@ export default function HomePage() {
   return (
     <div className="p-8">
       <button
-        onClick={() => authClient.signIn.social({ provider: "github" })}
+        onClick={() =>
+          authClient.signIn.social({
+            provider: "github",
+            callbackURL,
+          })
+        }
         className="rounded bg-black px-4 py-2 font-medium text-white hover:bg-zinc-800"
       >
         Sign in with GitHub
