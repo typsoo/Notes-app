@@ -1,49 +1,25 @@
-"use client";
+import { Suspense } from "react";
+import { LoginCard } from "@/features/auth/components/login-card";
 
-import { useSearchParams } from "next/navigation";
+interface LoginPageProps {
+  searchParams: Promise<{ callbackUrl?: string }>;
+}
 
-import { authClient } from "@/server/better-auth/clients";
-
-export default function HomePage() {
-  const searchParams = useSearchParams();
-  const { data: session, isPending } = authClient.useSession();
-
-  const callbackURL = searchParams.get("callbackUrl") ?? "/workspaces";
-
-  if (isPending) {
-    return <div className="p-8">Loading...</div>;
-  }
-
-  if (session) {
-    return (
-      <div className="flex flex-col gap-4 p-8">
-        <h1 className="text-xl font-bold">Signed in successfully</h1>
-        <pre className="rounded bg-zinc-900 p-4 text-sm text-green-400">
-          {JSON.stringify(session, null, 2)}
-        </pre>
-        <button
-          onClick={() => authClient.signOut()}
-          className="w-fit rounded bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700"
-        >
-          Sign out
-        </button>
-      </div>
-    );
-  }
-
+export default function LoginPage({ searchParams }: LoginPageProps) {
   return (
-    <div className="p-8">
-      <button
-        onClick={() =>
-          authClient.signIn.social({
-            provider: "github",
-            callbackURL,
-          })
+    <div className="relative flex min-h-screen w-full items-center justify-center p-4">
+      <div className="glass-backdrop fixed inset-0 -z-10" />
+
+      <Suspense
+        fallback={
+          <div className="glass-panel h-64 w-full max-w-sm animate-pulse rounded-2xl" />
         }
-        className="rounded bg-black px-4 py-2 font-medium text-white hover:bg-zinc-800"
       >
-        Sign in with GitHub
-      </button>
+        {searchParams.then((sp) => {
+          const callbackURL = sp.callbackUrl ?? "/workspaces";
+          return <LoginCard callbackURL={callbackURL} />;
+        })}
+      </Suspense>
     </div>
   );
 }
