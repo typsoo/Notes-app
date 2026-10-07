@@ -22,7 +22,7 @@ export interface TreeItemRowProps {
   arrow: React.ReactNode;
   context: TreeItemRenderContext;
   item: AppTreeItem;
-  onDelete?: (itemId: TreeItemIndex) => void;
+  onDelete: (itemId: TreeItemIndex) => void;
 }
 
 export function TreeItemRow({

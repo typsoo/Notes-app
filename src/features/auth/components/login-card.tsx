@@ -33,7 +33,7 @@ export function LoginCard({ callbackURL }: LoginCardProps) {
         size="lg"
         onClick={handleSignIn}
         disabled={loading}
-        className="w-full gap-2 shadow-md transition-all hover:translate-y-[-1px] active:translate-y-[1px]"
+        className="w-full gap-2 shadow-md transition-all hover:-translate-y-px active:translate-y-px"
       >
         {loading ? (
           <Loader2 className="size-4 animate-spin" />

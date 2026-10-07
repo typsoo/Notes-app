@@ -1,4 +1,4 @@
-import Search from "@/features/search/search";
+import Search from "@/features/search/sidebar-search-view";
 import { SidebarTab, type SidebarTabId } from "./tabs-data";
 
 import { SidebarContent } from "@/components/layout/sidebar/sidebar-content";
