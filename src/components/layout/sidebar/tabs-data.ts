@@ -1,7 +1,7 @@
 import { FileIcon, SearchIcon, type LucideIcon } from "lucide-react";
 
 export const SidebarTab = {
-  Files: "files",
+  Documents: "documents",
   Search: "search",
 } as const;
 
@@ -14,6 +14,6 @@ export interface SidebarTabItem {
 }
 
 export const SIDEBAR_TABS: readonly SidebarTabItem[] = [
-  { id: SidebarTab.Files, label: "Files", icon: FileIcon },
+  { id: SidebarTab.Documents, label: "Documents", icon: FileIcon },
   { id: SidebarTab.Search, label: "Search", icon: SearchIcon },
 ];

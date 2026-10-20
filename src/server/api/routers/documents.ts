@@ -3,9 +3,13 @@ import type { Block } from "@blocknote/core";
 
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter } from "@/server/api/trpc";
-import { documents, folders } from "@/server/db/schema";
+import { documents, documentSearch, folders } from "@/server/db/schema";
+import { blocksToPlainText } from "@/features/search/lib/plain-text";
+import { buildFolderPaths } from "@/features/search/lib/folder-paths";
+import { escapeLikePattern, tokenizeQuery } from "@/features/search/lib/query";
+import { makeSnippet } from "@/features/search/lib/snippet";
 
-import { eq, and, isNull } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, isNull, or, sql } from "drizzle-orm";
 
 import { workspaceProcedure } from "@/server/api/middleware/workspace";
 
@@ -62,24 +66,33 @@ export const documentsRouter = createTRPCRouter({
           });
         }
 
-        const [document] = await ctx.db
-          .insert(documents)
-          .values({
-            workspaceId: input.workspaceId,
-            folderId: input.folderId ?? null,
-            title: input.title,
-            content: input.content,
-            isPinned: input.isPinned,
-            isArchived: input.isArchived,
-          })
-          .returning();
+        const document = await ctx.db.transaction(async (tx) => {
+          const [created] = await tx
+            .insert(documents)
+            .values({
+              workspaceId: input.workspaceId,
+              folderId: input.folderId ?? null,
+              title: input.title,
+              content: input.content,
+              isPinned: input.isPinned,
+              isArchived: input.isArchived,
+            })
+            .returning();
 
-        if (!document) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to create document.",
+          if (!created) {
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "Failed to create document.",
+            });
+          }
+
+          await tx.insert(documentSearch).values({
+            documentId: created.id,
+            text: blocksToPlainText(input.content),
           });
-        }
+
+          return created;
+        });
 
         return document;
       } catch (error) {
@@ -118,6 +131,105 @@ export const documentsRouter = createTRPCRouter({
       .from(documents)
       .where(eq(documents.workspaceId, input.workspaceId));
   }),
+
+  search: workspaceProcedure
+    .input(
+      z.object({
+        query: z.string().trim().min(2).max(200),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const tokens = tokenizeQuery(input.query);
+
+      if (tokens.length === 0) {
+        return [];
+      }
+
+      const folderRows = await ctx.db
+        .select({
+          id: folders.id,
+          parentId: folders.parentId,
+          name: folders.name,
+        })
+        .from(folders)
+        .where(eq(folders.workspaceId, input.workspaceId));
+
+      const folderPaths = buildFolderPaths(folderRows);
+      const folderIdsByToken = new Map<string, string[]>();
+
+      for (const token of tokens) {
+        const needle = token.toLowerCase();
+
+        folderIdsByToken.set(
+          token,
+          folderRows
+            .filter((folder) =>
+              (folderPaths.get(folder.id) ?? "").toLowerCase().includes(needle),
+            )
+            .map((folder) => folder.id),
+        );
+      }
+
+      const matchedFolderIds = [
+        ...new Set([...folderIdsByToken.values()].flat()),
+      ];
+
+      const tokenConditions = tokens.map((token) => {
+        const pattern = `%${escapeLikePattern(token)}%`;
+        const folderIds = folderIdsByToken.get(token) ?? [];
+
+        if (folderIds.length === 0) {
+          return or(
+            ilike(documents.title, pattern),
+            ilike(documentSearch.text, pattern),
+          );
+        }
+
+        return or(
+          ilike(documents.title, pattern),
+          ilike(documentSearch.text, pattern),
+          inArray(documents.folderId, folderIds),
+        );
+      });
+
+      const titlePrefix = `${escapeLikePattern(input.query)}%`;
+      const titleContains = `%${escapeLikePattern(input.query)}%`;
+
+      const rank = matchedFolderIds.length
+        ? sql<number>`case
+            when ${documents.title} ilike ${titlePrefix} then 0
+            when ${documents.title} ilike ${titleContains} then 1
+            when ${inArray(documents.folderId, matchedFolderIds)} then 2
+            else 3
+          end`
+        : sql<number>`case
+            when ${documents.title} ilike ${titlePrefix} then 0
+            when ${documents.title} ilike ${titleContains} then 1
+            else 3
+          end`;
+
+      const rows = await ctx.db
+        .select({
+          id: documents.id,
+          title: documents.title,
+          folderId: documents.folderId,
+          text: documentSearch.text,
+        })
+        .from(documents)
+        .leftJoin(documentSearch, eq(documentSearch.documentId, documents.id))
+        .where(
+          and(eq(documents.workspaceId, input.workspaceId), ...tokenConditions),
+        )
+        .orderBy(rank, desc(documents.updatedAt))
+        .limit(50);
+
+      return rows.map((row) => ({
+        id: row.id,
+        title: row.title,
+        folderPath: row.folderId ? (folderPaths.get(row.folderId) ?? "") : "",
+        snippet: makeSnippet(row.text ?? "", tokens, 100),
+      }));
+    }),
 
   getById: workspaceProcedure
     .input(
@@ -178,23 +290,39 @@ export const documentsRouter = createTRPCRouter({
           }
         }
 
-        const [document] = await ctx.db
-          .update(documents)
-          .set({
-            ...updateData,
-            ...(folderId !== undefined ? { folderId } : {}),
-          })
-          .where(
-            and(eq(documents.id, id), eq(documents.workspaceId, workspaceId)),
-          )
-          .returning();
+        const document = await ctx.db.transaction(async (tx) => {
+          const [updated] = await tx
+            .update(documents)
+            .set({
+              ...updateData,
+              ...(folderId !== undefined ? { folderId } : {}),
+            })
+            .where(
+              and(eq(documents.id, id), eq(documents.workspaceId, workspaceId)),
+            )
+            .returning();
 
-        if (!document) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Document not found.",
-          });
-        }
+          if (!updated) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Document not found.",
+            });
+          }
+
+          if (input.content !== undefined) {
+            const text = blocksToPlainText(input.content);
+
+            await tx
+              .insert(documentSearch)
+              .values({ documentId: updated.id, text })
+              .onConflictDoUpdate({
+                target: documentSearch.documentId,
+                set: { text },
+              });
+          }
+
+          return updated;
+        });
 
         return document;
       } catch (error) {

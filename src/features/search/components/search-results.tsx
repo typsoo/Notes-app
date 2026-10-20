@@ -1,72 +1,86 @@
 "use client";
 
 import { FileText } from "lucide-react";
-import { api } from "@/trpc/react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
 
-interface SearchResultItem {
-  id: string;
-  title: string;
-  folderName?: string | null;
-  snippet?: string | null;
-}
+import { cn } from "@/lib/utils";
+import { api } from "@/trpc/react";
+import { HighlightedText } from "./highlighted-text";
 
 interface SearchResultsProps {
   query: string;
+  tokens: string[];
   workspaceId: string;
 }
 
-export function SearchResults({ query, workspaceId }: SearchResultsProps) {
-  const [documents] = api.documents.getAll.useSuspenseQuery({ workspaceId });
-
-  const normalizedQuery = query.toLocaleLowerCase();
-  const results: SearchResultItem[] = documents
-    .filter((document) =>
-      document.title.toLocaleLowerCase().includes(normalizedQuery),
-    )
-    .map((document) => ({
-      id: document.id,
-      title: document.title,
-    }));
+export function SearchResults({
+  query,
+  tokens,
+  workspaceId,
+}: SearchResultsProps) {
+  const [results] = api.documents.search.useSuspenseQuery({
+    workspaceId,
+    query,
+  });
+  const { id: activeDocumentId } = useParams<{ id?: string }>();
 
   if (results.length === 0) {
     return (
-      <div className="text-muted-foreground px-2 py-8 text-center text-sm">
-        No results for &quot;{query}&quot;
-      </div>
+      <p
+        className="text-muted-foreground px-2 py-8 text-center text-sm"
+        aria-live="polite"
+      >
+        No documents match &quot;{query}&quot;
+      </p>
     );
   }
 
   return (
     <section aria-label={`Search results for ${query}`}>
-      <p className="text-muted-foreground mb-2 px-2 text-xs">
-        Results for &quot;{query}&quot;
+      <p className="text-muted-foreground mb-2 px-2 text-xs" aria-live="polite">
+        {results.length} {results.length === 1 ? "document" : "documents"}
       </p>
       <ul className="flex flex-col gap-1">
-        {results.map((result) => (
-          <li key={result.id}>
-            <button
-              type="button"
-              className="hover:bg-muted flex w-full items-start gap-3 rounded-md px-2 py-2 text-left transition-colors"
-            >
-              <FileText className="text-muted-foreground mt-0.5 size-4 shrink-0" />
-              <span className="min-w-0">
-                <span className="block truncate text-sm font-medium">
-                  {result.title}
+        {results.map((result) => {
+          const isActive = result.id === activeDocumentId;
+          const href = `/workspaces/${workspaceId}/editor/${result.id}?${new URLSearchParams(
+            { q: query },
+          ).toString()}`;
+
+          return (
+            <li key={result.id}>
+              <Link
+                href={href}
+                aria-current={isActive ? "page" : undefined}
+                className={cn(
+                  "hover:bg-muted focus-visible:ring-ring flex w-full items-start gap-3 rounded-md px-2 py-2 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none",
+                  isActive && "bg-muted",
+                )}
+              >
+                <FileText className="text-muted-foreground mt-0.5 size-4 shrink-0" />
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-medium">
+                    <HighlightedText text={result.title} tokens={tokens} />
+                  </span>
+                  {result.folderPath && (
+                    <span className="text-muted-foreground block truncate text-xs">
+                      <HighlightedText
+                        text={result.folderPath}
+                        tokens={tokens}
+                      />
+                    </span>
+                  )}
+                  {result.snippet && (
+                    <span className="text-muted-foreground mt-1 line-clamp-2 block text-xs">
+                      <HighlightedText text={result.snippet} tokens={tokens} />
+                    </span>
+                  )}
                 </span>
-                {result.folderName && (
-                  <span className="text-muted-foreground block truncate text-xs">
-                    {result.folderName}
-                  </span>
-                )}
-                {result.snippet && (
-                  <span className="text-muted-foreground mt-1 line-clamp-2 block text-xs">
-                    {result.snippet}
-                  </span>
-                )}
-              </span>
-            </button>
-          </li>
-        ))}
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );

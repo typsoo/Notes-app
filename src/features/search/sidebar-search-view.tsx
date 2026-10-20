@@ -1,34 +1,53 @@
 "use client";
 
-import { Suspense } from "react";
-import { useSearchParams, useParams } from "next/navigation";
-import { Search } from "@/features/search/components/serach";
+import { Suspense, useDeferredValue } from "react";
+import { useParams, useSearchParams } from "next/navigation";
+
+import { EmptyState } from "./components/empty-state";
+import { SearchInput } from "./components/search-input";
 import {
   SearchResults,
   SearchResultsSkeleton,
 } from "./components/search-results";
-import { EmptyState } from "./components/empty-state";
+import { tokenizeQuery } from "./lib/query";
 
-function SearchContent() {
+function SearchPanel() {
   const { workspaceId } = useParams<{ workspaceId: string }>();
   const searchParams = useSearchParams();
-  const q = searchParams.get("q")?.trim() ?? "";
+  const query = searchParams.get("q")?.trim() ?? "";
+  const deferredQuery = useDeferredValue(query);
+  const tokens = tokenizeQuery(deferredQuery);
 
-  if (!q) {
-    return <EmptyState title="Search files" body="Type something to search." />;
-  }
+  return (
+    <main className="flex flex-col gap-4">
+      <SearchInput isStale={query !== deferredQuery} />
 
-  return <SearchResults query={q} workspaceId={workspaceId} />;
+      {!query ? (
+        <EmptyState
+          title="Search documents"
+          body="Type to search documents by title, body, or folder."
+        />
+      ) : query.length < 2 ? (
+        <p className="text-muted-foreground px-2 py-8 text-center text-sm">
+          Type at least 2 characters to search.
+        </p>
+      ) : (
+        <Suspense fallback={<SearchResultsSkeleton />}>
+          <SearchResults
+            query={deferredQuery}
+            tokens={tokens}
+            workspaceId={workspaceId}
+          />
+        </Suspense>
+      )}
+    </main>
+  );
 }
 
 export default function SearchView() {
   return (
-    <main className="flex flex-col gap-4">
-      <Search />
-
-      <Suspense fallback={<SearchResultsSkeleton />}>
-        <SearchContent />
-      </Suspense>
-    </main>
+    <Suspense fallback={<SearchResultsSkeleton />}>
+      <SearchPanel />
+    </Suspense>
   );
 }
