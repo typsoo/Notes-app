@@ -1,6 +1,7 @@
 // Example model schema from the Drizzle docs
 // https://orm.drizzle.team/docs/sql-schema-declaration
 
+import { sql } from "drizzle-orm";
 import {
   index,
   primaryKey,
@@ -204,6 +205,32 @@ export const documents = createTable(
   (t) => [
     index("documents_workspaceId_idx").on(t.workspaceId),
     uniqueIndex("documents_workspaceId_title_idx").on(t.title, t.folderId),
+    index("documents_title_trgm_idx").using(
+      "gin",
+      sql`${t.title} gin_trgm_ops`,
+    ),
+  ],
+);
+
+export const documentSearch = createTable(
+  "document_search",
+  (d) => ({
+    documentId: d
+      .uuid()
+      .primaryKey()
+      .references(() => documents.id, { onDelete: "cascade" }),
+    text: d.text().notNull().default(""),
+    updatedAt: d
+      .timestamp({ withTimezone: true })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  }),
+  (t) => [
+    index("document_search_text_trgm_idx").using(
+      "gin",
+      sql`${t.text} gin_trgm_ops`,
+    ),
   ],
 );
 

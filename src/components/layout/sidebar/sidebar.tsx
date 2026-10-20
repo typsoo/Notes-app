@@ -11,7 +11,7 @@ interface SidebarProps {
 
 export function Sidebar({ workspaceTree }: SidebarProps) {
   const panelMap: Record<SidebarTabId, React.ReactNode> = {
-    [SidebarTab.Files]: (
+    [SidebarTab.Documents]: (
       <TreeControlProvider>
         <TreeControlPanel />
         {workspaceTree}
@@ -20,5 +20,7 @@ export function Sidebar({ workspaceTree }: SidebarProps) {
     [SidebarTab.Search]: <Search />,
   };
 
-  return <SidebarContent panelMap={panelMap} defaultTab={SidebarTab.Files} />;
+  return (
+    <SidebarContent panelMap={panelMap} defaultTab={SidebarTab.Documents} />
+  );
 }
