@@ -2,6 +2,10 @@
 
 Workspace-based note taking: nested folders, a rich-text editor, and fast document search.
 
+<p align="center">
+<img width="720" height="405" alt="preview" src="https://github.com/user-attachments/assets/575ed56c-f86a-4086-8d7c-8bfa40a3d95b" />
+</p>
+
 ## Features
 
 - **Workspaces** — membership-scoped containers with isolated folders and documents.
@@ -13,7 +17,7 @@ Workspace-based note taking: nested folders, a rich-text editor, and fast docume
 
 ## Stack
 
-Next.js 16 (App Router, RSC, Cache Components, React Compiler) · React 19 · TypeScript · Tailwind CSS v4 · tRPC · TanStack Query · Drizzle ORM · PostgreSQL · Better Auth · BlockNote · Vitest
+Next.js 16 (App Router, RSC, Cache Components, React Compiler) · React 19 · TypeScript · Tailwind CSS v4 · tRPC · TanStack Query · Drizzle ORM · PostgreSQL · Better Auth · BlockNote · Vitest · Three.js
 
 ## Architecture
 
